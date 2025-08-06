@@ -1,0 +1,34 @@
+import Head from "next/head";
+import Link from "next/link";
+import 'C:/Users/mmn10/OneDrive/바탕 화면/welfare/welfare/public/style.css'
+
+export default function MainPage() {
+  return (
+    <>
+      <Head>
+        <title>학생복지위원회 메인페이지</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="/style.css" />
+      </Head>
+
+      <div className="new-main-container">
+        <img src="/swc로고.png" className="main-logo" alt="학생복지위원회 로고" />
+
+        <div className="new-menu-grid">
+          <Link href="/intro" className="new-menu-item">
+            학생복지위원회 소개
+          </Link>
+          <Link href="/rental" className="new-menu-item">
+            물품 대여 신청
+          </Link>
+          <Link href="/bus" className="new-menu-item">
+            버스 대여 신청
+          </Link>
+          <Link href="/schedule" className="new-menu-item">
+            학생복지위 일정
+          </Link>
+        </div>
+      </div>
+    </>
+  );
+}

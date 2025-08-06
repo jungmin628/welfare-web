@@ -1,6 +1,5 @@
 import Head from "next/head";
 import Link from "next/link";
-import 'C:/Users/mmn10/OneDrive/바탕 화면/welfare/welfare/public/style.css'
 
 export default function MainPage() {
   return (

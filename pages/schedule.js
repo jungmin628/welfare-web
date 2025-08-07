@@ -8,6 +8,22 @@ import { useRouter } from 'next/router';
 export default function SchedulePage() {
   const [events, setEvents] = useState([]);
   const router = useRouter();
+  useEffect(() => {
+  // 1. 서버에서 일정 불러오기
+  const fetchEvents = async () => {
+    const res = await fetch('/api/rental/schedule');
+    const data = await res.json();
+    if (data.success) {
+      setEvents(data.events);
+    }
+  };
+  fetchEvents();
+
+  // 2. 페이지 진입 시 새로고침
+  if (performance.navigation.type !== 1) {
+    window.location.reload();
+  }
+}, []);
 
   useEffect(() => {
     const fetchEvents = async () => {

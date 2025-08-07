@@ -174,8 +174,8 @@ export default function SubmitPage() {
           <label>반납시간</label>
           <input value={returnTime} readOnly />
 
-          <label>대여 사유</label>
-          <textarea name="reason" rows={2} onChange={handleChange} />
+          <label>대여 사유 (대여와 반납시간 별개로, 행사 운영날짜와 시간을 적어주세요.)</label>
+          <textarea name="reason" rows={2} placeholder="예: 9월 1일 10시~17시 개강행사" onChange={handleChange} />
 
           <label>집회신고서 첨부</label>
           <input type="file" name="file" onChange={handleChange} />

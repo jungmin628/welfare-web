@@ -20,7 +20,7 @@ export default function ReturnPage() {
   alert(
     "📢 반납은 학생복지위원회 근무시간에만 가능하며, \n 가급적 행사 종료 다음날  반납 부탁드립니다. "
   );
-  setShowCalendar(true);
+  
 }, []);
 
   const holidays = [

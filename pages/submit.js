@@ -177,7 +177,7 @@ export default function SubmitPage() {
           <label>대여 사유</label>
           <textarea name="reason" rows={2} onChange={handleChange} />
 
-          <label>파일 첨부</label>
+          <label>집회신고서 첨부</label>
           <input type="file" name="file" onChange={handleChange} />
 
           <button type="submit">신청서 제출</button>

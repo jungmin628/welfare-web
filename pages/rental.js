@@ -190,6 +190,10 @@ cell.appendChild(numberSpan);
         >
           다음
         </Link>
+        
+        <Link href="/" className="next-btn"> 메인으로 </Link>
+
+        
       </div>
 
       <style jsx>{`

@@ -24,7 +24,7 @@ export default function MainPage() {
             버스 대여 신청
           </Link>
           <Link href="/schedule" className="new-menu-item">
-            학생복지위 일정
+            학생복지위원회 <br></br>물품대여 일정
           </Link>
         </div>
       </div>

@@ -253,6 +253,9 @@ cell.appendChild(numberSpan);
         }
 
         .calendar-cell {
+          display: flex;
+          justify-content: center;
+          align-item: center;
           padding: 12px 0;
           text-align: center;
           background: #f0f0f0;

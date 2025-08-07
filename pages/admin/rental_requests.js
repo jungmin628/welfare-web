@@ -4,6 +4,7 @@ import {
   collection,
   getDocs,
   updateDoc,
+  deleteDoc,
   doc,
   query,
   orderBy
@@ -31,8 +32,8 @@ export default function AdminRentalRequests() {
     fetchRequests();
   };
 
-  const handleReject = async (id) => {
-    await updateDoc(doc(db, "rental_requests", id), { status: "rejected" });
+  const handleDelete = async (id) => {
+    await deleteDoc(doc(db, "rental_requests", id));
     fetchRequests();
   };
 
@@ -82,7 +83,7 @@ export default function AdminRentalRequests() {
               {req.status === "pending" && (
                 <div className="actions">
                   <button className="approve" onClick={() => handleApprove(req.id)}>승인</button>
-                  <button className="reject" onClick={() => handleReject(req.id)}>거절</button>
+                  <button className="reject" onClick={() => handleDelete(req.id)}>삭제</button>
                 </div>
               )}
             </div>

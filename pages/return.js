@@ -1,4 +1,3 @@
-// pages/return.js
 import { useEffect, useRef, useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
@@ -9,12 +8,27 @@ export default function ReturnPage() {
   const nextBtnRef = useRef(null);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
-  const [rentalDate, setRentalDate] = useState(null);
+  const [selectedTime, setSelectedTime] = useState(null);
+
+  function formatDate(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+  useEffect(() => {
+  alert(
+    "📢 반납은 학생복지위원회 근무시간에만 가능하며, \n 가급적 행사 종료 다음날  반납 부탁드립니다. "
+  );
+  setShowCalendar(true);
+}, []);
 
   const holidays = [
     "2025-01-01", "2025-03-01", "2025-05-05", "2025-06-06",
     "2025-08-15", "2025-09-10", "2025-10-03", "2025-12-25"
   ];
+
+  const timeSlots = ["10-11", "11-12", "12-13", "13-14", "14-15", "15-16", "16-17"];
 
   const renderCalendar = () => {
     const grid = gridRef.current;
@@ -29,43 +43,66 @@ export default function ReturnPage() {
     const lastDate = new Date(year, month + 1, 0).getDate();
     label.textContent = `${year}년 ${month + 1}월`;
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     for (let i = 0; i < firstDay; i++) {
       const cell = document.createElement("div");
       cell.className = "calendar-cell empty";
-      cell.textContent = "";
       grid.appendChild(cell);
     }
 
     for (let d = 1; d <= lastDate; d++) {
       const cell = document.createElement("div");
-      const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-      const dateObj = new Date(dateStr);
+      const dateObj = new Date(year, month, d);
+      const formatted = formatDate(dateObj);
 
-      const isBeforeRental = rentalDate && dateObj <= rentalDate;
-      const isHoliday = holidays.includes(dateStr);
-      const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
+      const day = dateObj.getDay();
+      const isPast = dateObj < today;
+      const isHoliday = holidays.includes(formatted);
+      const isWeekend = day === 0 || day === 6;
 
       cell.className = "calendar-cell";
-      if (isBeforeRental || isHoliday || isWeekend) {
+
+      if (isPast || isHoliday || isWeekend) {
         cell.classList.add("disabled");
-      } else {
+      }
+      if (isHoliday) cell.classList.add("holiday");
+      if (day === 0) cell.classList.add("sunday");
+      if (day === 6) cell.classList.add("saturday");
+
+      const numberSpan = document.createElement("span");
+      numberSpan.textContent = d;
+      if (isHoliday || day === 0 || day === 6) {
+        numberSpan.style.color = "red";
+      }
+
+      cell.appendChild(numberSpan);
+
+      if (!isPast && !isHoliday && !isWeekend) {
         cell.onclick = () => {
-          setSelectedDate(dateStr);
-          localStorage.setItem("returnDate", dateStr);
+          setSelectedDate(formatted);
+          setSelectedTime(null);
+          localStorage.setItem("returnDate", formatted);
           document.querySelectorAll(".calendar-cell").forEach(c => c.classList.remove("selected"));
           cell.classList.add("selected");
-          document.getElementById("selectedDate").textContent = `선택된 날짜: ${dateStr}`;
-          nextBtnRef.current.style.display = "block";
+          document.getElementById("selectedDate").textContent = `선택된 날짜: ${formatted}`;
         };
       }
 
-      cell.textContent = d;
-      if (selectedDate === dateStr) {
+      if (selectedDate === formatted) {
         cell.classList.add("selected");
       }
 
       grid.appendChild(cell);
     }
+  };
+
+  const handleTimeSelect = (slot) => {
+    setSelectedTime(slot);
+    const fullDateTime = `${selectedDate} ${slot}`;
+    localStorage.setItem("returnDateTime", fullDateTime);
+    nextBtnRef.current.style.display = "block";
   };
 
   const changeMonth = (offset) => {
@@ -76,14 +113,13 @@ export default function ReturnPage() {
   };
 
   useEffect(() => {
-    const rentalStr = localStorage.getItem("rentalDate");
-    if (!rentalStr) return alert("먼저 대여일자를 선택해주세요.");
-    const rental = new Date(rentalStr);
-    setRentalDate(rental);
-    setCurrentMonth(new Date(rental.getFullYear(), rental.getMonth(), 1));
-
     const saved = localStorage.getItem("returnDate");
+    const savedTime = localStorage.getItem("returnDateTime");
     if (saved) setSelectedDate(saved);
+    if (savedTime) {
+      const [, time] = savedTime.split(" ");
+      setSelectedTime(time);
+    }
   }, []);
 
   useEffect(() => {
@@ -98,19 +134,50 @@ export default function ReturnPage() {
 
       <div className="calendar">
         <h2 className="title">📅 반납일 선택</h2>
-        <h6 className="title"> 주말, 공휴일은 선택할 수 없습니다. 행사 종료 직후 평일로 선택해주세요. </h6>
+        <h6 className="title">주말, 공휴일은 선택할 수 없습니다. 행사 종료 후 평일로 선택해주세요.</h6>
+
         <div className="calendar-controls">
           <button onClick={() => changeMonth(-1)}>← 이전</button>
           <span ref={labelRef}></span>
           <button onClick={() => changeMonth(1)}>다음 →</button>
         </div>
+
+        <div className="calendar-header">
+          <span className="day-label sunday">일</span>
+          <span className="day-label">월</span>
+          <span className="day-label">화</span>
+          <span className="day-label">수</span>
+          <span className="day-label">목</span>
+          <span className="day-label">금</span>
+          <span className="day-label saturday">토</span>
+        </div>
+
         <div className="calendar-grid" ref={gridRef}></div>
-        <p id="selectedDate">선택된 날짜: 없음</p>
+
+        <p id="selectedDate">선택된 날짜: {selectedDate || "없음"}</p>
+
+        {selectedDate && (
+          <div className="time-slot-container">
+            <h4>시간대 선택</h4>
+            <div className="time-slot-buttons">
+              {timeSlots.map((slot) => (
+                <button
+                  key={slot}
+                  className={`time-slot-btn ${selectedTime === slot ? "selected-time" : ""}`}
+                  onClick={() => handleTimeSelect(slot)}
+                >
+                  {slot}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <Link
           href="/rental_items"
           className="next-btn"
           ref={nextBtnRef}
-          style={{ display: selectedDate ? "block" : "none" }}
+          style={{ display: selectedDate && selectedTime ? "block" : "none" }}
         >
           다음
         </Link>
@@ -125,16 +192,19 @@ export default function ReturnPage() {
           border-radius: 12px;
           box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
+
         .title {
           text-align: center;
           margin-bottom: 16px;
         }
+
         .calendar-controls {
           display: flex;
           justify-content: space-between;
           align-items: center;
           margin-bottom: 10px;
         }
+
         .calendar-controls button {
           background: #7b68ee;
           color: #fff;
@@ -142,11 +212,33 @@ export default function ReturnPage() {
           padding: 6px 12px;
           border-radius: 5px;
         }
+
+        .calendar-header {
+          display: grid;
+          grid-template-columns: repeat(7, 1fr);
+          text-align: center;
+          font-weight: bold;
+          margin-bottom: 5px;
+        }
+
+        .day-label {
+          padding: 10px 0;
+          border-bottom: 1px solid #ccc;
+        }
+
+        .day-label.sunday {
+          color: red;
+        }
+        .day-label.saturday {
+          color: red;
+        }
+
         .calendar-grid {
           display: grid;
           grid-template-columns: repeat(7, 1fr);
           gap: 5px;
         }
+
         .calendar-cell {
           padding: 12px 0;
           text-align: center;
@@ -155,18 +247,53 @@ export default function ReturnPage() {
           cursor: pointer;
           font-weight: bold;
         }
+
         .calendar-cell.empty {
           background: transparent;
         }
+
         .calendar-cell.disabled {
           background: #e0e0e0;
           color: #aaa;
           cursor: not-allowed;
         }
+
         .calendar-cell.selected {
           background: #4a54e1;
           color: white;
         }
+
+        .time-slot-container {
+          margin-top: 20px;
+          text-align: center;
+        }
+
+        .time-slot-buttons {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 10px;
+          margin-top: 10px;
+        }
+
+        .time-slot-btn {
+          background: #ddd;
+          padding: 8px 14px;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-weight: bold;
+        }
+
+        .time-slot-btn:hover {
+          background: #ccc;
+        }
+
+        .time-slot-btn.selected-time {
+          background: #4a54e1;
+          color: white;
+        }
+
         .next-btn {
           display: block;
           margin: 20px auto 0;

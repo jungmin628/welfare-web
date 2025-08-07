@@ -1,4 +1,3 @@
-// pages/rental_items.js
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
@@ -11,9 +10,9 @@ export default function RentalItemsPage() {
   useEffect(() => {
     const items = [
       { name: "천막", max: 5 },
-      { name: "천막 가림막" },
+      { name: "천막 가림막", max: 3 },
       { name: "테이블", max: 16 },
-      { name: "의자" },
+      { name: "의자" , max: 30},
       { name: "행사용 앰프", max: 1 },
       { name: "이동용 앰프", max: 1 },
       { name: "리드선 50m", max: 2 },
@@ -21,29 +20,46 @@ export default function RentalItemsPage() {
       { name: "운반기 대형", max: 1 },
       { name: "운반기 소형", max: 1 },
       { name: "운반기 L카트", max: 1 },
-      { name: "아이스박스 70L" },
-      { name: "아이스박스 50L" },
-      { name: "무전기" },
-      { name: "확성기" },
-      { name: "명찰" },
-      { name: "이젤" },
-      { name: "돗자리" },
-      { name: "1인용 돗자리" },
-      { name: "목장갑" },
-      { name: "줄다리기 줄 15m" },
-      { name: "줄다리기 줄 25m" },
-      { name: "중형 화이트보드" }
+      { name: "아이스박스 70L", max: 1 },
+      { name: "아이스박스 50L", max: 2 },
+      { name: "무전기", max: 6 },
+      { name: "확성기", max: 6 },
+      { name: "명찰", max: 80 },
+      { name: "이젤", max: 5 },
+      { name: "돗자리", max:9 },
+      { name: "1인용 돗자리", max:96 },
+      { name: "목장갑", max:69 },
+      { name: "줄다리기 줄 15m", max:1 },
+      { name: "줄다리기 줄 25m", max:1 },
+      { name: "중형 화이트보드",max:1 }
     ];
     setInventory(items);
   }, []);
 
   const handleChange = (name, value) => {
-    setQuantities(prev => ({ ...prev, [name]: parseInt(value) || 0 }));
+    const intValue = Math.max(0, parseInt(value) || 0);
+    setQuantities(prev => ({ ...prev, [name]: intValue }));
+  };
+
+  const increaseQty = (name, max) => {
+    setQuantities(prev => {
+      const current = prev[name] || 0;
+      if (max !== undefined && current >= max) return prev;
+      return { ...prev, [name]: current + 1 };
+    });
+  };
+
+  const decreaseQty = (name) => {
+    setQuantities(prev => {
+      const current = prev[name] || 0;
+      if (current <= 0) return prev;
+      return { ...prev, [name]: current - 1 };
+    });
   };
 
   const handleSubmit = async () => {
-    const rentalDate = localStorage.getItem("rentalDate");
-    const returnDate = localStorage.getItem("returnDate");
+    const rentalDate = localStorage.getItem("rentalDateTime");
+    const returnDate = localStorage.getItem("returnDateTime");
     if (!rentalDate || !returnDate) {
       alert("날짜를 먼저 선택해주세요.");
       return;
@@ -68,7 +84,10 @@ export default function RentalItemsPage() {
     const result = await res.json();
 
     if (result.available) {
-      localStorage.setItem("rentalItems", Object.entries(rentalItems).map(([k, v]) => `${k}: ${v}`).join("\n"));
+      localStorage.setItem(
+        "rentalItems",
+        Object.entries(rentalItems).map(([k, v]) => `${k}: ${v}`).join("\n")
+      );
       localStorage.setItem("rentalItemsObject", JSON.stringify(rentalItems));
       alert("✅ 재고가 남아있습니다! 확인 버튼을 누른 후, 물품신청서를 작성해주세요.");
       router.push("/submit");
@@ -89,15 +108,19 @@ export default function RentalItemsPage() {
               <label htmlFor={name} className="item-label">
                 {name}{max ? ` (최대 ${max}개)` : ''}
               </label>
-              <input
-                type="number"
-                id={name}
-                className="item-input"
-                min="0"
-                max={max}
-                value={quantities[name] || 0}
-                onChange={(e) => handleChange(name, e.target.value)}
-              />
+              <div className="item-control">
+                <button type="button" onClick={() => decreaseQty(name)}>-</button>
+                <input
+                  type="number"
+                  id={name}
+                  min="0"
+                  max={max}
+                  value={quantities[name] || 0}
+                  onChange={(e) => handleChange(name, e.target.value)}
+                />
+                <button type="button" onClick={() => increaseQty(name, max)}>+</button>
+                <span className="unit">개</span>
+              </div>
             </div>
           ))}
         </div>
@@ -136,37 +159,67 @@ export default function RentalItemsPage() {
         .item-label {
           display: block;
           font-weight: 600;
-          margin-bottom: 6px;
+          margin-bottom: 8px;
         }
-        .item-input {
-          width: 100%;
-          padding: 10px;
+        .item-control {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .item-control input {
+          width: 60px;
+          text-align: center;
+          padding: 8px;
           font-size: 15px;
           border: 1px solid #ccc;
           border-radius: 6px;
         }
-        .button-group {
-          display: flex;
-          justify-content: center;
-          margin-top: 30px;
-          gap: 12px;
-        }
-        .btn {
-          padding: 12px 24px;
+        .item-control button {
+          background: #ddd;
           border: none;
-          border-radius: 8px;
+          padding: 6px 12px;
+          border-radius: 6px;
+          font-size: 18px;
           font-weight: bold;
-          font-size: 15px;
           cursor: pointer;
         }
-        .submit-btn {
-          background: #4a54e1;
-          color: white;
+        .item-control .unit {
+          font-size: 14px;
+          color: #555;
         }
-        .back-btn {
-          background: #ccc;
-          color: #333;
-        }
+        .button-group {
+  display: flex;
+  flex-direction: column; /* 🔥 세로로 정렬 */
+  align-items: center;
+  margin-top: 30px;
+  gap: 5px;
+}
+
+.btn {
+  width: 120px;
+  height: 48px;
+  padding: 0;
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+  line-height: 48px; /* 글자를 정확히 중앙 정렬 */
+  border: none;
+  border-radius: 8px;
+  box-sizing: border-box;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.submit-btn {
+  background: #4a54e1;
+  color: white;
+}
+
+.back-btn {
+  background: #ccc;
+  color: #333;
+}
+
       `}</style>
     </>
   );

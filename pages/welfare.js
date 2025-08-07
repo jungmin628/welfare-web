@@ -60,7 +60,7 @@ export default function WelfarePage() {
 
         {/* 보조배터리/계산기 */}
         <div className="welfare-box" onClick={() => toggleDetail("detail3")}>
-          보조배터리, 공학용 계산기 대여 사업
+          우산, 고데기, 무선마우스, 보조배터리, <br></br>노트북 받침대,공학용 계산기 대여 사업
         </div>
         {visible.detail3 && (
           <div className="welfare-detail">

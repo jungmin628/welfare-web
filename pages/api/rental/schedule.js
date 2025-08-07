@@ -1,6 +1,7 @@
 import { getFirestore } from "firebase-admin/firestore";
 import { initializeApp, getApps, cert } from "firebase-admin/app";
-import serviceAccount from "../../../firebase/welfare-website-firebase-adminsdk-fbsvc-13991244b1.json";
+
+const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_JSON);
 
 if (!getApps().length) {
   initializeApp({

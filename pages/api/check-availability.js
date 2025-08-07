@@ -3,7 +3,7 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 
 // 품목별 최대 수량 정의
 const ITEM_LIMITS = {
-  "천막": 5,
+  "천막": 10,
   "테이블": 16,
   "행사용 앰프": 1,
   "이동용 앰프": 1,

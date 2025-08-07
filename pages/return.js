@@ -18,7 +18,7 @@ export default function ReturnPage() {
   }
   useEffect(() => {
   alert(
-    "📢 반납은 학생복지위원회 근무시간에만 가능하며, \n 가급적 행사 종료 다음날  반납 부탁드립니다. "
+    "📢 대여는 행사 시작 전날 또는 당일에만 가능합니다. 이전에는 대여가 불가능합니다. \n 📢 신청한 대여시간을 꼭 준수해주시기 바랍니다. 차후 불이익이 생길 수 있습니다. "
   );
   
 }, []);
@@ -134,7 +134,7 @@ export default function ReturnPage() {
 
       <div className="calendar">
         <h2 className="title">📅 반납일 선택</h2>
-        <h6 className="title">주말, 공휴일은 선택할 수 없습니다. 행사 종료 후 평일로 선택해주세요.</h6>
+        <h5 className="title">주말, 공휴일은 선택할 수 없습니다. 행사 종료 후 평일로 선택해주세요.</h5>
         <h5 className="title">대여/반납 시간을 반드시 준수 해주시기 바랍니다. </h5>
         <div className="calendar-controls">
           <button onClick={() => changeMonth(-1)}>← 이전</button>

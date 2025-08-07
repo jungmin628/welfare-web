@@ -143,8 +143,8 @@ cell.appendChild(numberSpan);
 
       <div className="calendar">
         <h2 className="title">📅 대여일 선택</h2>
-        <h6 className="title">주말, 공휴일은 선택할 수 없습니다. 행사 시작 전 평일로 선택해주세요.</h6>
-
+        <h5 className="title">주말, 공휴일은 선택할 수 없습니다. 행사 시작 전 평일로 선택해주세요.</h5>
+        <h5 className="title">대여/반납 시간을 반드시 준수 해주시기 바랍니다. </h5>
         <div className="calendar-controls">
           <button onClick={() => changeMonth(-1)}>← 이전</button>
           <span ref={labelRef}></span>
@@ -193,7 +193,9 @@ cell.appendChild(numberSpan);
         
         <Link href="/" className="next-btn"> 메인으로 </Link>
 
-        
+        <p className="contact-info">
+  문의사항이 생길 시, <br></br> 부위원장 이정민 : 010-9426-1027 에게 연락바랍니다.
+</p>
       </div>
 
       <style jsx>{`
@@ -324,6 +326,18 @@ cell.appendChild(numberSpan);
           border-radius: 10px;
           text-decoration: none;
         }
+
+        .contact-info {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #555;
+    text-align: center;
+  }
+
+  h5{
+    text-align: center;
+    color : #ce0018;
+}
       `}</style>
     </>
   );

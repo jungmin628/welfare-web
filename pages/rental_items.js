@@ -130,6 +130,10 @@ export default function RentalItemsPage() {
           <button className="btn submit-btn" onClick={handleSubmit}>다음</button>
           <button className="btn back-btn" onClick={() => router.back()}>이전</button>
         </div>
+
+        <p className="contact-info">
+  문의사항이 생길 시, <br></br>부위원장 이정민 : 010-9426-1027 에게 연락바랍니다.
+</p>
       </div>
 
       <style jsx>{`
@@ -223,8 +227,15 @@ export default function RentalItemsPage() {
 
 h5{
     text-align: center;
+    
 }
 
+.contact-info {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #555;
+    text-align: center;
+  }
       `}</style>
     </>
   );

@@ -41,5 +41,4 @@
 | 배포           | Vercel |
 | 기타           | Custom Calendar UI, Firebase Hosting(이미지/정적 파일) |
 
-# 📂 페이지 구조
 

@@ -41,11 +41,5 @@
 | 배포           | Vercel |
 | 기타           | Custom Calendar UI, Firebase Hosting(이미지/정적 파일) |
 
----
-
-└── notices.js # 관리자 공지사항 관리
-
-
-
-## 📂 페이지 구조
+# 📂 페이지 구조
 

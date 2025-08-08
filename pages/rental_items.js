@@ -1,3 +1,4 @@
+// pages/rental_items.js
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import Head from "next/head";
@@ -12,7 +13,7 @@ export default function RentalItemsPage() {
       { name: "천막", max: 10 },
       { name: "천막 가림막", max: 3 },
       { name: "테이블", max: 16 },
-      { name: "의자" , max: 30},
+      { name: "의자", max: 30 },
       { name: "행사용 앰프", max: 1 },
       { name: "이동용 앰프", max: 1 },
       { name: "리드선 50m", max: 2 },
@@ -26,23 +27,23 @@ export default function RentalItemsPage() {
       { name: "확성기", max: 6 },
       { name: "명찰", max: 80 },
       { name: "이젤", max: 5 },
-      { name: "돗자리", max:9 },
-      { name: "1인용 돗자리", max:96 },
-      { name: "목장갑", max:69 },
-      { name: "줄다리기 줄 15m", max:1 },
-      { name: "줄다리기 줄 25m", max:1 },
-      { name: "중형 화이트보드",max:1 }
+      { name: "돗자리", max: 9 },
+      { name: "1인용 돗자리", max: 96 },
+      { name: "목장갑", max: 69 },
+      { name: "줄다리기 줄 15m", max: 1 },
+      { name: "줄다리기 줄 25m", max: 1 },
+      { name: "중형 화이트보드", max: 1 },
     ];
     setInventory(items);
   }, []);
 
   const handleChange = (name, value) => {
     const intValue = Math.max(0, parseInt(value) || 0);
-    setQuantities(prev => ({ ...prev, [name]: intValue }));
+    setQuantities((prev) => ({ ...prev, [name]: intValue }));
   };
 
   const increaseQty = (name, max) => {
-    setQuantities(prev => {
+    setQuantities((prev) => {
       const current = prev[name] || 0;
       if (max !== undefined && current >= max) return prev;
       return { ...prev, [name]: current + 1 };
@@ -50,7 +51,7 @@ export default function RentalItemsPage() {
   };
 
   const decreaseQty = (name) => {
-    setQuantities(prev => {
+    setQuantities((prev) => {
       const current = prev[name] || 0;
       if (current <= 0) return prev;
       return { ...prev, [name]: current - 1 };
@@ -58,59 +59,90 @@ export default function RentalItemsPage() {
   };
 
   const handleSubmit = async () => {
-    const rentalDate = localStorage.getItem("rentalDateTime");
-    const returnDate = localStorage.getItem("returnDateTime");
+    const rentalDate = localStorage.getItem("rentalDateTime"); // 예: "2025-08-11 11-12"
+    const returnDate = localStorage.getItem("returnDateTime"); // 예: "2025-08-12 14-15"
+
     if (!rentalDate || !returnDate) {
       alert("날짜를 먼저 선택해주세요.");
       return;
     }
 
-    const rentalItems = {};
-    Object.entries(quantities).forEach(([name, qty]) => {
-      if (qty > 0) rentalItems[name] = qty;
-    });
+    // 0개 초과 항목만 수집
+    const itemsArray = Object.entries(quantities)
+      .filter(([_, qty]) => (qty || 0) > 0)
+      .map(([name, qty]) => ({ name, qty }));
 
-    if (Object.keys(rentalItems).length === 0) {
+    if (itemsArray.length === 0) {
       alert("1개 이상의 물품을 선택해주세요.");
       return;
     }
 
-    const res = await fetch("/api/check-availability", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ rentalDate, returnDate, rentalItems })
-    });
+    try {
+      const res = await fetch("/api/check-availability", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rentalDate,       // "YYYY-MM-DD HH-HH"
+          returnDate,       // "YYYY-MM-DD HH-HH"
+          items: itemsArray // [{ name, qty }]
+        }),
+      });
 
-    const result = await res.json();
+      const result = await res.json();
 
-    if (result.available) {
-      localStorage.setItem(
-        "rentalItems",
-        Object.entries(rentalItems).map(([k, v]) => `${k}: ${v}`).join("\n")
-      );
-      localStorage.setItem("rentalItemsObject", JSON.stringify(rentalItems));
-      alert("✅ 재고가 남아있습니다! 확인 버튼을 누른 후, 물품신청서를 작성해주세요.");
-      router.push("/submit");
-    } else {
-      alert(`❌ ${result.item || '일부 항목'}의 재고가 부족합니다. 다른 일정을 선택해주세요.`);
+      if (!result.ok) {
+        alert("오류가 발생했습니다: " + (result.error || "알 수 없는 오류"));
+        return;
+      }
+
+      if (result.available) {
+        // 화면에 보여줄 용(문자열) + 실제 제출용(객체) 둘 다 저장
+        const rentalItemsObj = Object.fromEntries(itemsArray.map(i => [i.name, i.qty]));
+        localStorage.setItem(
+          "rentalItems",
+          itemsArray.map(i => `${i.name}: ${i.qty}`).join("\n")
+        );
+        localStorage.setItem("rentalItemsObject", JSON.stringify(rentalItemsObj));
+
+        alert("✅ 재고가 남아있습니다! 확인 버튼을 누른 후, 물품신청서를 작성해주세요.");
+        router.push("/submit");
+      } else {
+        // 하루 독점 정책 충돌 상세 안내
+        const msg = (result.conflicts || [])
+          .map((c) => `- ${c.date}에 ${c.item} 이미 예약됨`)
+          .join("\n");
+        alert(`❌ 대여 불가\n같은 날짜에 동일 품목 예약이 존재합니다.\n${msg}`);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
     }
   };
 
   return (
     <>
-      <Head><title>대여 물품 선택</title></Head>
-      
+      <Head>
+        <title>대여 물품 선택</title>
+      </Head>
+
       <div className="container">
         <h2 className="page-title">📦 대여 물품 선택</h2>
-      <h5>지정된 최대 갯수를 초과하여 대여 원할 경우, <br></br>우선 최대 갯수로 신청하시고 부위원장에게 따로 연락 바랍니다. </h5>
+        <h5>
+          지정된 최대 갯수를 초과하여 대여 원할 경우, <br />
+          우선 최대 갯수로 신청하시고 부위원장에게 따로 연락 바랍니다.
+        </h5>
+
         <div className="item-list">
           {inventory.map(({ name, max }) => (
             <div key={name} className="item-card">
               <label htmlFor={name} className="item-label">
-                {name}{max ? ` (최대 ${max}개)` : ''}
+                {name}
+                {max ? ` (최대 ${max}개)` : ""}
               </label>
               <div className="item-control">
-                <button type="button" onClick={() => decreaseQty(name)}>-</button>
+                <button type="button" onClick={() => decreaseQty(name)}>
+                  -
+                </button>
                 <input
                   type="number"
                   id={name}
@@ -119,7 +151,9 @@ export default function RentalItemsPage() {
                   value={quantities[name] || 0}
                   onChange={(e) => handleChange(name, e.target.value)}
                 />
-                <button type="button" onClick={() => increaseQty(name, max)}>+</button>
+                <button type="button" onClick={() => increaseQty(name, max)}>
+                  +
+                </button>
                 <span className="unit">개</span>
               </div>
             </div>
@@ -127,13 +161,18 @@ export default function RentalItemsPage() {
         </div>
 
         <div className="button-group">
-          <button className="btn submit-btn" onClick={handleSubmit}>다음</button>
-          <button className="btn back-btn" onClick={() => router.back()}>이전</button>
+          <button className="btn submit-btn" onClick={handleSubmit}>
+            다음
+          </button>
+          <button className="btn back-btn" onClick={() => router.back()}>
+            이전
+          </button>
         </div>
 
         <p className="contact-info">
-  문의사항이 생길 시, <br></br>부위원장 이정민 : 010-9426-1027 에게 연락바랍니다.
-</p>
+          문의사항이 생길 시, <br />
+          부위원장 이정민 : 010-9426-1027 에게 연락바랍니다.
+        </p>
       </div>
 
       <style jsx>{`
@@ -159,7 +198,7 @@ export default function RentalItemsPage() {
           background: white;
           padding: 12px 16px;
           border-radius: 10px;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         }
         .item-label {
           display: block;
@@ -193,49 +232,43 @@ export default function RentalItemsPage() {
           color: #555;
         }
         .button-group {
-  display: flex;
-  flex-direction: column; /* 🔥 세로로 정렬 */
-  align-items: center;
-  margin-top: 30px;
-  gap: 5px;
-}
-
-.btn {
-  width: 120px;
-  height: 48px;
-  padding: 0;
-  font-size: 16px;
-  font-weight: bold;
-  text-align: center;
-  line-height: 48px; /* 글자를 정확히 중앙 정렬 */
-  border: none;
-  border-radius: 8px;
-  box-sizing: border-box;
-  cursor: pointer;
-  display: inline-block;
-}
-
-.submit-btn {
-  background: #4a54e1;
-  color: white;
-}
-
-.back-btn {
-  background: #ccc;
-  color: #333;
-}
-
-h5{
-    text-align: center;
-    
-}
-
-.contact-info {
-    margin-top: 20px;
-    font-size: 14px;
-    color: #555;
-    text-align: center;
-  }
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          margin-top: 30px;
+          gap: 5px;
+        }
+        .btn {
+          width: 120px;
+          height: 48px;
+          padding: 0;
+          font-size: 16px;
+          font-weight: bold;
+          text-align: center;
+          line-height: 48px;
+          border: none;
+          border-radius: 8px;
+          box-sizing: border-box;
+          cursor: pointer;
+          display: inline-block;
+        }
+        .submit-btn {
+          background: #4a54e1;
+          color: white;
+        }
+        .back-btn {
+          background: #ccc;
+          color: #333;
+        }
+        h5 {
+          text-align: center;
+        }
+        .contact-info {
+          margin-top: 20px;
+          font-size: 14px;
+          color: #555;
+          text-align: center;
+        }
       `}</style>
     </>
   );

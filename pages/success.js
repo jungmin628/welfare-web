@@ -13,7 +13,7 @@ export default function SuccessPage() {
         <div className="success-box">
           <h2>✅ 대여신청이 완료되었습니다!</h2>
           <p className="desc">
-            자세한 시간을 정하기 위해, 입력하신 내용을 바탕으로<br />
+            입력하신 내용을 바탕으로
             <strong>부위원장이 개별 연락</strong>을 드릴 예정입니다. <br />
             문의사항은 부위원장 이정민 : 010-9426-1027 로 연락바랍니다.
           </p>

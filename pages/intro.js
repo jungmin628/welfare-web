@@ -47,7 +47,10 @@ export default function IntroPage() {
             조직도
           </Link>
           <Link href="/notice" className="intro-btn">
-            공지사항
+            학생복지위원회 SNS
+          </Link>
+          <Link href="/notice" className="intro-btn">
+            자주하는 질문
           </Link>
         </div>
 

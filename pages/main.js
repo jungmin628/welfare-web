@@ -27,7 +27,16 @@ export default function MainPage() {
             학생복지위원회 <br></br>물품대여 일정
           </Link>
         </div>
+        <br /><br />
+        <span ><strong> 제19대 학생복지위원회 위원장 유재범 : 010-5049-4135
+          <br /> 제19대 학생복지위원회 부위원장 이정민 : 010-9426-1027
+        </strong></span>
       </div>
+      <style jsx>{`
+      span{
+        color : #9352E6
+      }
+      `}</style>
     </>
   );
 }

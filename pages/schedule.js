@@ -4,6 +4,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import listPlugin from '@fullcalendar/list';
 import { useRouter } from 'next/router';
+import Link from "next/link";
 
 export default function SchedulePage() {
   const [events, setEvents] = useState([]);
@@ -67,8 +68,10 @@ export default function SchedulePage() {
         height="auto"
 
       />
-
-      <button style={buttonStyle} onClick={() => router.push('/')}>메인으로</button>
+      
+      <Link href="/rental" className="next-btn">  대여신청하러 가기</Link>
+      <Link href="/" className="next-btn">메인으로 </Link>
+    
     </div>
   );
 }

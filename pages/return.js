@@ -18,7 +18,7 @@ export default function ReturnPage() {
   }
   useEffect(() => {
   alert(
-    "📢 반납은 행사 종료 후 평일 근무시간에만 가능합니다. \n 📢 신청한 대여시간을 꼭 준수해주시기 바랍니다. 차후 불이익이 생길 수 있습니다. "
+    "📢 반납은 행사 종료 후 평일 근무시간에만 가능합니다. \n\n 📢 신청한 대여시간을 꼭 준수해주시기 바랍니다. 차후 불이익이 생길 수 있습니다. "
   );
   
 }, []);
@@ -181,6 +181,7 @@ export default function ReturnPage() {
         >
           다음
         </Link>
+        <Link href="/" className="next-btn"> 메인으로 </Link>
 
         <p className="contact-info">
   문의사항이 생길 시, <br></br>부위원장 이정민 : 010-9426-1027 에게 연락바랍니다.
@@ -189,7 +190,7 @@ export default function ReturnPage() {
 
       <style jsx>{`
         .calendar {
-          background: #f4f4ff;
+          background: #E6E6FA;
           max-width: 420px;
           margin: 40px auto;
           padding: 20px;
@@ -207,6 +208,8 @@ export default function ReturnPage() {
           justify-content: space-between;
           align-items: center;
           margin-bottom: 10px;
+          
+
         }
 
         .calendar-controls button {

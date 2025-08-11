@@ -134,10 +134,11 @@ export default function RentalItemsPage() {
       <div className="container">
         <h2 className="page-title">📦 대여 물품 선택</h2>
         <h5>
-          지정된 최대 갯수를 초과하여 대여 원할 경우, <br />
-          우선 최대 갯수로 신청하시고 부위원장에게 따로 연락 바랍니다.
+          <dl> ✅ 지정된 최대 갯수를 초과하여 대여 원할 경우, <br />우선 최대 갯수로 신청하시고 부위원장에게 따로 연락 바랍니다. </dl>
+          <dl> ✅ 필요 수량만큼만 신청해주시기 바랍니다. </dl>
+          
+          
         </h5>
-
         <div className="item-list">
           {inventory.map(({ name, max }) => (
             <div key={name} className="item-card">

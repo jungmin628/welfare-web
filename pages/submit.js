@@ -125,7 +125,7 @@ export default function SubmitPage() {
 
     } catch (error) {
       console.error("신청 실패:", error);
-      alert("❌ 신청에 실패했습니다. 다시 시도해주세요.");
+      alert("❌ 신청에 실패했습니다. 다시 시도해주세요. 문제가 지속될 시, 부위원장에게 연락 바랍니다. \n\n 부위원장 이정민 : 010-9426-1027 ");
     }
   };
 
@@ -177,7 +177,7 @@ export default function SubmitPage() {
           <label>대여 사유 (대여와 반납시간 별개로, 행사 운영날짜와 시간을 적어주세요.)</label>
           <textarea name="reason" rows={2} placeholder="예: 9월 1일 10시~17시 개강행사" onChange={handleChange} />
 
-          <label>집회신고서 첨부</label>
+          <label>집회신고서 첨부(3MB 이하)</label>
           <input type="file" name="file" onChange={handleChange} />
 
           <button type="submit">신청서 제출</button>

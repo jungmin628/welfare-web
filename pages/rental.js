@@ -2,8 +2,11 @@
 import { useEffect, useRef, useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
+import { useRouter } from "next/router";
 
 export default function RentalPage() {
+  const router = useRouter();
+
   const gridRef = useRef(null);
   const labelRef = useRef(null);
   const nextBtnRef = useRef(null);
@@ -13,12 +16,25 @@ export default function RentalPage() {
 
   const [showCalendar, setShowCalendar] = useState(false);
 
-useEffect(() => {
-  alert(
-    "📢 대여는 행사 시작 전날 또는 당일에만 가능합니다. 이전에는 대여가 불가능합니다. \n 📢 신청한 대여시간을 꼭 준수해주시기 바랍니다. 차후 불이익이 생길 수 있습니다. "
-  );
-  setShowCalendar(true);
-}, []);
+  useEffect(() => {
+
+    const goCheck = confirm(
+      "📢 승인된 대여 일정을 확인하시겠어요?\n(확인: 일정 보기 / 취소: 바로 대여일 선택)"
+    );
+
+    if (goCheck) {
+      // 확인 누르면 /schedule 로 이동
+      router.push("/schedule?from=rental");
+      return; // 이동하므로 렌더 진행 X
+    }
+
+    // 취소 누르면 달력 바로 표시
+        alert(
+      "📢 대여는 행사 시작 전날 또는 당일에만 가능합니다. 이전에는 대여가 불가능합니다. \n\n 📢 신청한 대여시간을 꼭 준수해주시기 바랍니다. 차후 불이익이 생길 수 있습니다. "
+    );
+
+    setShowCalendar(true);
+  }, [router]);
   
   function formatDate(date) {
   const y = date.getFullYear();
@@ -26,6 +42,7 @@ useEffect(() => {
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
+
 
   const holidays = [
     "2025-01-01", "2025-03-01", "2025-05-05", "2025-06-06",

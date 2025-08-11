@@ -24,7 +24,7 @@ export default function BusRental() {
           </div>
           <div className="contact-wrapper">
             <div className="contact-button">
-              학생복지위원장 유재범 ☎ 010-5049-4135
+              ☎ 학생복지위원장 유재범 : 010-5049-4135
             </div>
           </div>
         </div>

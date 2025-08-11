@@ -72,6 +72,24 @@ export default function RentalItemsPage() {
     [quantities]
   );
 
+  function summarizeConflicts(conflicts = []) {
+  const map = {};
+  for (const c of conflicts) {
+    const date = c.date || c.day || c.when;   // 혹시 키 이름이 달라도 대응
+    const item = c.item || c.name;
+    if (!date || !item) continue;
+
+    // API가 count/qty를 넣어주면 사용, 없으면 1개로 카운트
+    const inc = Number(c.count ?? c.qty ?? 1);
+    const key = `${date}__${item}`;
+    map[key] = (map[key] || 0) + (isNaN(inc) ? 1 : inc);
+  }
+
+  return Object.entries(map).map(([key, total]) => {
+    const [date, item] = key.split("__");
+    return `${date} · ${item} ${total}개 예약되어 불가`;
+  });
+}
   const handleSubmit = async () => {
     const rentalDate = typeof window !== "undefined" && localStorage.getItem("rentalDateTime"); // "YYYY-MM-DD HH-HH"
     const returnDate = typeof window !== "undefined" && localStorage.getItem("returnDateTime"); // "YYYY-MM-DD HH-HH"
@@ -114,10 +132,11 @@ export default function RentalItemsPage() {
         alert("✅ 재고가 남아있습니다! 확인 후 물품신청서를 작성해주세요.");
         router.push("/submit");
       } else {
-        const msg = (result.conflicts || [])
-          .map((c) => `- ${c.date}에 ${c.item} 이미 예약됨`)
-          .join("\n");
-        alert(`❌ 대여 불가\n같은 날짜에 동일 품목 예약이 존재합니다.\n${msg}`);
+        const lines = summarizeConflicts(result.conflicts || []);
+        const body = lines.length
+        ? `- ${lines.join("\n- ")}`
+          : "(사유 정보를 불러오지 못했습니다)";
+        alert(`❌ 대여 불가\n${body}`);
       }
     } catch (e) {
       console.error(e);

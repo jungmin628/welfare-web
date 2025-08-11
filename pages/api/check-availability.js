@@ -1,20 +1,20 @@
 // /pages/api/check-availability.js
 import admin from "firebase-admin";
 
-/** --- Firebase Admin 안전 초기화 --- */
+/** --- Firebase Admin 안전 초기화 (base64/JSON 모두 허용) --- */
 function initAdmin() {
   if (admin.apps.length) return;
 
   let credsRaw = process.env.FIREBASE_ADMIN_CREDENTIALS_JSON;
   if (!credsRaw) throw new Error("FIREBASE_ADMIN_CREDENTIALS_JSON is not set");
 
-  // base64 또는 JSON 문자열 모두 허용
+  // base64면 디코딩 시도, JSON이면 그대로 사용
   try {
-    const maybeDecoded = Buffer.from(credsRaw, "base64").toString("utf8");
-    JSON.parse(maybeDecoded);
-    credsRaw = maybeDecoded;
+    const decoded = Buffer.from(credsRaw, "base64").toString("utf8");
+    JSON.parse(decoded);
+    credsRaw = decoded;
   } catch (_) {
-    // 이미 JSON 문자열이면 통과
+    // 이미 JSON 문자열인 경우 통과
   }
 
   const serviceAccount = JSON.parse(credsRaw);
@@ -24,7 +24,7 @@ initAdmin();
 
 const db = admin.firestore();
 
-/** --- 품목별 최대 수량 (프론트와 반드시 일치!) --- */
+/** --- 품목별 최대 수량 (프론트와 반드시 일치) --- */
 const ITEM_LIMITS = {
   "천막": 10,
   "천막 가림막": 3,
@@ -51,89 +51,43 @@ const ITEM_LIMITS = {
   "중형 화이트보드": 1,
 };
 
-/** 문자열 → { date:'YYYY-MM-DD', hStart:number, hEnd:number } */
-function parseDateHourRange(input) {
+/** --- 헬퍼: 문자열에서 날짜(YYYY-MM-DD)만 뽑기 --- */
+function dateOnlyAny(input) {
   if (!input) return null;
+  const s = String(input);
 
-  // 1) "YYYY-MM-DD HH-HH"
-  const m1 = String(input).match(/^(\d{4}-\d{2}-\d{2})\s+(\d{1,2})-(\d{1,2})$/);
-  if (m1) {
-    const date = m1[1];
-    const hStart = Number(m1[2]);
-    const hEnd = Number(m1[3]);
-    if (
-      Number.isFinite(hStart) &&
-      Number.isFinite(hEnd) &&
-      hStart >= 0 &&
-      hEnd <= 24 &&
-      hStart < hEnd
-    ) {
-      return { date, hStart, hEnd };
-    }
-  }
+  // "YYYY-MM-DD HH-HH"
+  let m = s.match(/^(\d{4}-\d{2}-\d{2})\s+\d{1,2}-\d{1,2}$/);
+  if (m) return m[1];
 
-  // 2) ISO "YYYY-MM-DDTHH:mm" → 1시간 슬롯으로 해석
-  const m2 = String(input).match(/^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})/);
-  if (m2) {
-    const date = m2[1];
-    const hStart = Number(m2[2]);
-    const hEnd = Math.min(24, hStart + 1);
-    return { date, hStart, hEnd };
-  }
+  // ISO "YYYY-MM-DDTHH:mm..."
+  m = s.match(/^(\d{4}-\d{2}-\d{2})T\d{2}:\d{2}/);
+  if (m) return m[1];
 
-  // 3) 날짜만 들어오면 하루 종일
-  const m3 = String(input).match(/^(\d{4}-\d{2}-\d{2})$/);
-  if (m3) return { date: m3[1], hStart: 0, hEnd: 24 };
+  // 날짜만
+  m = s.match(/^(\d{4}-\d{2}-\d{2})$/);
+  if (m) return m[1];
 
   return null;
 }
 
-/** 날짜 범위 확장 (YYYY-MM-DD ~ YYYY-MM-DD) */
-function expandDatesInclusive(startYMD, endYMD) {
+/** --- 헬퍼: 날짜 구간(포함) 배열 --- */
+function eachDayInclusive(startYMD, endYMD) {
   const [y1, m1, d1] = startYMD.split("-").map(Number);
   const [y2, m2, d2] = endYMD.split("-").map(Number);
-  const start = new Date(y1, m1 - 1, d1);
-  const end = new Date(y2, m2 - 1, d2);
+  const s = new Date(y1, m1 - 1, d1);
+  const e = new Date(y2, m2 - 1, d2);
+  s.setHours(0, 0, 0, 0);
+  e.setHours(0, 0, 0, 0);
 
   const out = [];
-  for (let dt = new Date(start); dt <= end; dt.setDate(dt.getDate() + 1)) {
-    const yyyy = dt.getFullYear();
-    const mm = String(dt.getMonth() + 1).padStart(2, "0");
-    const dd = String(dt.getDate()).padStart(2, "0");
-    out.push(`${yyyy}-${mm}-${dd}`);
+  for (let dt = new Date(s); dt <= e; dt.setDate(dt.getDate() + 1)) {
+    out.push(dt.toISOString().slice(0, 10));
   }
   return out;
 }
 
-/** 요청 전체를 시간 슬롯으로 분해: { "<day>": Set<hour> } */
-function toHourlySlots(rentalDateStr, returnDateStr) {
-  const s = parseDateHourRange(rentalDateStr);
-  const e = parseDateHourRange(returnDateStr);
-  if (!s || !e) return null;
-
-  const days = expandDatesInclusive(s.date, e.date);
-  const slots = {};
-  for (const day of days) slots[day] = new Set();
-
-  for (const day of days) {
-    if (day === s.date && day === e.date) {
-      // 같은 날: [hStart, hEnd)
-      for (let h = s.hStart; h < e.hEnd; h++) slots[day].add(h);
-    } else if (day === s.date) {
-      // 시작일: [hStart, 24)
-      for (let h = s.hStart; h < 24; h++) slots[day].add(h);
-    } else if (day === e.date) {
-      // 종료일: [0, hEnd)
-      for (let h = 0; h < e.hEnd; h++) slots[day].add(h);
-    } else {
-      // 사이 날짜: [0,24)
-      for (let h = 0; h < 24; h++) slots[day].add(h);
-    }
-  }
-  return slots;
-}
-
-/** 승인 상태 정규화 */
+/** --- 승인 상태 정규화 --- */
 function isApprovedStatus(val) {
   return (
     val === "approved" ||
@@ -143,9 +97,8 @@ function isApprovedStatus(val) {
   );
 }
 
-/** items 정규화: 배열/맵 모두 → [{ name, qty }] */
+/** --- items 정규화: 배열/맵 모두 → [{ name, qty }] --- */
 function normalizeItems(items) {
-  // 배열 [{ name, qty }] / [{ itemName, quantity }]
   if (Array.isArray(items)) {
     return items
       .map((it) => ({
@@ -154,7 +107,6 @@ function normalizeItems(items) {
       }))
       .filter((it) => it.name && it.qty > 0);
   }
-  // 맵 { "천막 가림막": 3, "테이블": 1 }
   if (items && typeof items === "object") {
     return Object.entries(items)
       .map(([name, qty]) => ({ name, qty: Number(qty) || 0 }))
@@ -174,110 +126,73 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { rentalDate, returnDate, items } = req.body || {};
-    if (!rentalDate || !returnDate || !Array.isArray(items)) {
-      return res.status(400).json({ ok: false, error: "Missing fields" });
+    const { rentalDate, returnDate, items = [] } = req.body || {};
+    const start = dateOnlyAny(rentalDate);
+    const end = dateOnlyAny(returnDate);
+
+    if (!start || !end || !Array.isArray(items)) {
+      return res.status(400).json({ ok: false, error: "Missing or invalid fields" });
     }
 
-    // 요청 시간 슬롯 계산
-    const reqSlots = toHourlySlots(rentalDate, returnDate);
-    if (!reqSlots) {
-      return res.status(400).json({ ok: false, error: "Invalid date/time format" });
-    }
+    const reqDays = eachDayInclusive(start, end);
+    const reqItems = normalizeItems(items);
 
-    // 시간 슬롯 단위 사용량: used[day][hour][item] = qty
-    const used = Object.create(null);
-
-    // 승인건 로드: 상태 다양성 때문에 전체 읽고 필터
+    // --- 승인된 예약만 집계 ---
     const snap = await db.collection("rental_requests").get();
     let approvedDocsCount = 0;
 
+    // 날짜·품목별 기존 예약 합계
+    const reservedByDayItem = new Map(); // key: YYYY-MM-DD__품목 -> 수량 합계
+
     snap.forEach((doc) => {
-      const data = doc.data();
-      if (!isApprovedStatus(data?.status)) return;
+      const d = doc.data();
+      if (!isApprovedStatus(d?.status)) return;
 
-      const aSlots = toHourlySlots(data?.rentalDate, data?.returnDate);
-      if (!aSlots) return;
+      const s = dateOnlyAny(d?.rentalDateTime || d?.rentalDate || d?.startDate);
+      const e = dateOnlyAny(d?.returnDateTime || d?.returnDate || d?.endDate);
+      if (!s || !e) return;
 
-      const aItems = normalizeItems(data?.items);
-      if (!aItems.length) return;
+      const days = eachDayInclusive(s, e);
+      const list = normalizeItems(d?.items || d?.rentalItems || d?.itemsObject);
+      if (!list.length) return;
 
       approvedDocsCount++;
 
-      for (const [day, hoursSet] of Object.entries(aSlots)) {
-        if (!used[day]) used[day] = Object.create(null);
-        for (const hour of hoursSet) {
-          if (!used[day][hour]) used[day][hour] = Object.create(null);
-          for (const it of aItems) {
-            const { name, qty } = it;
-            used[day][hour][name] = (used[day][hour][name] || 0) + qty;
-          }
+      for (const day of days) {
+        for (const { name, qty } of list) {
+          const key = `${day}__${name}`;
+          reservedByDayItem.set(key, (reservedByDayItem.get(key) || 0) + qty);
         }
       }
     });
 
-    // 요청 품목에 대해 시간 슬롯별 잔여 수량 체크
+    // --- 요청과 비교: 날짜·품목 당 한 레코드 ---
     const conflicts = [];
-    // const remainingDebug = {}; // 필요시 디버그용
+    for (const day of reqDays) {
+      for (const { name, qty } of reqItems) {
+        const limit = ITEM_LIMITS[name] ?? Infinity;
+        const reserved = reservedByDayItem.get(`${day}__${name}`) || 0;
+        const available = Math.max(0, limit - reserved);
 
-    for (const [day, hoursSet] of Object.entries(reqSlots)) {
-      for (const hour of hoursSet) {
-        const usedOnSlot = used[day]?.[hour] || {};
-        // remainingDebug[day] ??= {}; remainingDebug[day][hour] ??= {};
-
-        for (const reqItem of items) {
-          const name = reqItem?.name || reqItem?.itemName;
-          const reqQty = Number(reqItem?.qty ?? reqItem?.quantity ?? 0);
-          if (!name || reqQty <= 0) continue;
-
-          const limit = ITEM_LIMITS[name];
-          if (typeof limit !== "number") {
-            conflicts.push({
-              item: name,
-              date: day,
-              hour,
-              reason: "unknown-item",
-              required: reqQty,
-              remaining: 0,
-            });
-            continue;
-          }
-
-          const already = usedOnSlot[name] || 0;
-          const remaining = Math.max(0, limit - already);
-          // remainingDebug[day][hour][name] = remaining;
-
-          if (reqQty > remaining) {
-            conflicts.push({
-              item: name,
-              date: day,
-              hour,
-              required: reqQty,
-              remaining,
-              limit,
-              alreadyReserved: already,
-            });
-          }
+        if (reserved + qty > limit) {
+          conflicts.push({
+            date: day,            // YYYY-MM-DD
+            item: name,           // 품목명
+            reserved,             // 그 날 이미 예약된 총 수량
+            limit,                // 보유 한도
+            requested: qty,       // 이번 요청 수량
+            available,            // 현재 잔여(요청 전)
+          });
         }
       }
     }
 
-    if (conflicts.length) {
-      return res.status(200).json({
-        ok: true,
-        available: false,
-        policy: "per-item-hourly",
-        approvedDocsCount,
-        conflicts,
-        // remainingDebug,
-      });
-    }
-
     return res.status(200).json({
       ok: true,
-      available: true,
-      policy: "per-item-hourly",
+      policy: "per-item-per-day", // 참고용
       approvedDocsCount,
+      available: conflicts.length === 0,
+      conflicts, // 항상 같은 스키마(date,item,reserved,limit,requested,available)
     });
   } catch (err) {
     console.error(err);

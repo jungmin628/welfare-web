@@ -75,22 +75,30 @@ export default function RentalItemsPage() {
   function summarizeConflicts(conflicts = []) {
   if (!Array.isArray(conflicts) || conflicts.length === 0) return [];
 
-  const map = new Map(); // key: date__item
+  const map = new Map(); // date__item -> summary
   for (const c of conflicts) {
     const date = c.date || c.day || c.when;
     const item = c.item || c.name;
     if (!date || !item) continue;
 
+    // 안전 보정
+    const limit     = Number(c.limit ?? c.max ?? 0);
+    const reserved  = Number(c.reserved ?? c.count ?? c.qty ?? 0);
+    const requested = Number(c.requested ?? c.req ?? 0);
+    // available이 안 왔으면 계산
+    const available = Number(c.available ?? (limit ? Math.max(0, limit - reserved) : 0));
+
     const key = `${date}__${item}`;
-    const prev = map.get(key) || { reserved: 0, limit: c.limit, requested: c.requested, date, item, available: c.available };
-    // ✅ 합계 X, 같은 날짜·품목이면 최대 동시 사용량만 유지
-    if (typeof c.reserved === "number") {
-      prev.reserved = Math.max(prev.reserved, c.reserved);
+    const prev = map.get(key);
+    if (!prev) {
+      map.set(key, { date, item, limit, reserved, requested, available });
+    } else {
+      // 같은 날짜·품목이 여러 줄이면 동시 최대치 기준으로 갱신
+      prev.reserved  = Math.max(prev.reserved, reserved);
+      prev.requested = Math.max(prev.requested, requested);
+      prev.available = Math.min(prev.available, available);
+      prev.limit     = prev.limit || limit;
     }
-    prev.limit = c.limit ?? prev.limit;
-    prev.requested = c.requested ?? prev.requested;
-    prev.available = c.available ?? prev.available;
-    map.set(key, prev);
   }
 
   return Array.from(map.values()).map(

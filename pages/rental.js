@@ -13,9 +13,11 @@ export default function RentalPage() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
-
   const [showCalendar, setShowCalendar] = useState(false);
 
+  const [hasShownSelectNotice, setHasShownSelectNotice] = useState(false);
+
+  
   useEffect(() => {
   // 1) Next.js SPA 내 이전 페이지가 있는지 (초기 로드 idx=0, 그 외 >0)
   const hasPrevByIdx = typeof window !== "undefined" && window.history?.state?.idx > 0;
@@ -43,9 +45,6 @@ export default function RentalPage() {
     return; // 이동
   }
 
-  alert(
-    "📢 대여는 행사 시작 전날 또는 당일에만 가능합니다. 이전에는 대여가 불가능합니다. \n\n 📢 신청한 대여시간을 꼭 준수해주시기 바랍니다. 차후 불이익이 생길 수 있습니다. "
-  );
   setShowCalendar(true);
 }, [router]);
 
@@ -147,10 +146,18 @@ cell.appendChild(numberSpan);
   };
 
   const handleTimeSelect = (slot) => {
-    setSelectedTime(slot);
-    const fullDateTime = `${selectedDate} ${slot}`;
-    localStorage.setItem("rentalDateTime", fullDateTime);
-    nextBtnRef.current.style.display = "block";
+     setSelectedTime(slot);
+  const fullDateTime = `${selectedDate} ${slot}`;
+  localStorage.setItem("rentalDateTime", fullDateTime);
+  if (nextBtnRef.current) nextBtnRef.current.style.display = "block";
+
+  // ✅ 날짜와 시간 모두 선택된 시점에 한 번만 안내
+  if (selectedDate && !hasShownSelectNotice) {
+    alert(
+      "📢 대여는 행사 시작 전날 또는 당일에만 가능합니다. 이전에는 대여가 불가능합니다. \n\n 📢 신청한 대여시간을 꼭 준수해주시기 바랍니다. 차후 불이익이 생길 수 있습니다. "
+    );
+    setHasShownSelectNotice(true);
+  }
   };
 
   const changeMonth = (offset) => {

@@ -10,6 +10,8 @@ export default function ReturnPage() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
 
+  const [hasShownSelectNotice, setHasShownSelectNotice] = useState(false);
+
   function formatDate(date) {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, "0");
@@ -17,9 +19,7 @@ export default function ReturnPage() {
     return `${y}-${m}-${d}`;
   }
   useEffect(() => {
-  alert(
-    "📢 반납은 행사 종료 후 평일 근무시간에만 가능합니다. \n\n 📢 신청한 대여시간을 꼭 준수해주시기 바랍니다. 차후 불이익이 생길 수 있습니다. "
-  );
+
   
 }, []);
 
@@ -106,11 +106,19 @@ function getWeekdayFromYMD(ymd) {
     }
   };
 
-  const handleTimeSelect = (slot) => {
-    setSelectedTime(slot);
-    const fullDateTime = `${selectedDate} ${slot}`;
-    localStorage.setItem("returnDateTime", fullDateTime);
-    nextBtnRef.current.style.display = "block";
+const handleTimeSelect = (slot) => {
+     setSelectedTime(slot);
+  const fullDateTime = `${selectedDate} ${slot}`;
+  localStorage.setItem("rentalDateTime", fullDateTime);
+  if (nextBtnRef.current) nextBtnRef.current.style.display = "block";
+
+  // ✅ 날짜와 시간 모두 선택된 시점에 한 번만 안내
+  if (selectedDate && !hasShownSelectNotice) {
+    alert(
+      "📢 반납은 행사 종료 후 평일 근무시간에만 가능합니다. \n\n 📢 신청한 대여시간을 꼭 준수해주시기 바랍니다. 차후 불이익이 생길 수 있습니다. "
+    );
+    setHasShownSelectNotice(true);
+  }
   };
 
   const changeMonth = (offset) => {

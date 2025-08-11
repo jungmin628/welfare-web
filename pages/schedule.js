@@ -30,7 +30,7 @@ export default function SchedulePage() {
   // 날짜/시간 포맷터
   const pad2 = (n) => String(n).padStart(2, "0");
   const fmtDate = (d) => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
-  const fmtHour = (d) => `${pad2(d.getHours())}시`; // 시만 표시
+  const fmtHour = (d) => `${pad2(d.getHours()+1)}시`; // 시만 표시
 
   // 커스텀 렌더: 날짜 / 시간 분리 노출
   const renderEventContent = (info) => {
@@ -38,12 +38,12 @@ export default function SchedulePage() {
     const e = info.event.end || info.event.start;
     const dateText =
       fmtDate(s) === fmtDate(e) ? fmtDate(s) : `${fmtDate(s)} ~ ${fmtDate(e)}`;
-    const timeText = `${fmtHour(s)} ~ ${fmtHour(e)}`;
+    const timeText = `${fmtHour(s)}시 대여 /  ${fmtHour(e)}시 반납`;
 
     return (
       <div style={eventBoxStyle}>
         <div style={{ fontSize: "0.72rem", opacity: 0.9 }}>날짜 | {dateText}</div>
-        <div style={{ fontSize: "0.72rem", opacity: 0.9 }}>시간 | {timeText}</div>
+        <div style={{ fontSize: "0.72rem", opacity: 0.9 }}>대여/반납 시간 | {timeText}</div>
         <div>{info.event.title}</div>
       </div>
     );

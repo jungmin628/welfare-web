@@ -56,8 +56,8 @@ export default function IntroPage() {
         </a>
 
         <div className="intro-btn-group">
-          <Link href="/notice" className="intro-btn">
-            자주하는 질문
+          <Link href="/bus" className="intro-btn">
+            버스 대여 신청 안내
           </Link>
           <Link href="/location" className="intro-btn">
             학생복지위원회실 위치·운영시간

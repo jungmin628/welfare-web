@@ -15,20 +15,20 @@ export default function MainPage() {
 
         <div className="new-menu-grid">
           <Link href="/intro" className="new-menu-item">
-            학생복지위원회 소개 및 자주 하는 질문
+            학생복지위원회 소개 및 버스 대여 신청 안내
           </Link>
           <Link href="/rental" className="new-menu-item">
             물품 대여 신청
           </Link>
-          <Link href="/bus" className="new-menu-item">
-            버스 대여 신청
+          <Link href="/notice" className="new-menu-item">
+            자주 하는 질문
           </Link>
           <Link href="/schedule" className="new-menu-item">
             학생복지위원회 <br></br>물품대여 일정
           </Link>
         </div>
         <br /><br />
-        <span >문의사항이 있을 경우, "학생복지위원회 소개 및 자주 하는 질문"을 먼저 확인해주시기 바랍니다. </span>
+        <span >문의사항이 있을 경우, <strong>"자주 하는 질문" </strong>을 먼저 확인해주시기 바랍니다. </span>
         <br /> <br />
         <span>
           <strong> 제19대 학생복지위원회 위원장 유재범 : 010-5049-4135

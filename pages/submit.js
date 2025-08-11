@@ -194,6 +194,10 @@ export default function SubmitPage() {
           </details>
           <br />
           <input type="file" name="file" onChange={handleChange} />
+          
+          <label>기타 문의 사항</label>
+          <input name="qna" onChange={handleChange} />
+
 
           <button type="submit">신청서 제출</button>
         </form>

@@ -78,8 +78,8 @@ export default function FAQPage() {
           ))}
         </div>
 
-        <Link href="/intro" className="back-btn">
-          뒤로 돌아가기
+        <Link href="/" className="back-btn">
+          메인으로
         </Link>
       </div>
 

@@ -73,22 +73,30 @@ export default function RentalItemsPage() {
   );
 
   function summarizeConflicts(conflicts = []) {
-  const map = {};
+  if (!Array.isArray(conflicts) || conflicts.length === 0) return [];
+
+  const map = new Map(); // key: date__item
   for (const c of conflicts) {
-    const date = c.date || c.day || c.when;   // 혹시 키 이름이 달라도 대응
+    const date = c.date || c.day || c.when;
     const item = c.item || c.name;
     if (!date || !item) continue;
 
-    // API가 count/qty를 넣어주면 사용, 없으면 1개로 카운트
-    const inc = Number(c.count ?? c.qty ?? 1);
     const key = `${date}__${item}`;
-    map[key] = (map[key] || 0) + (isNaN(inc) ? 1 : inc);
+    const prev = map.get(key) || { reserved: 0, limit: c.limit, requested: c.requested, date, item, available: c.available };
+    // ✅ 합계 X, 같은 날짜·품목이면 최대 동시 사용량만 유지
+    if (typeof c.reserved === "number") {
+      prev.reserved = Math.max(prev.reserved, c.reserved);
+    }
+    prev.limit = c.limit ?? prev.limit;
+    prev.requested = c.requested ?? prev.requested;
+    prev.available = c.available ?? prev.available;
+    map.set(key, prev);
   }
 
-  return Object.entries(map).map(([key, total]) => {
-    const [date, item] = key.split("__");
-    return `${date} · ${item} ${total}개 예약되어 불가`;
-  });
+  return Array.from(map.values()).map(
+    (x) =>
+      `${x.date} · ${x.item} (기존 ${x.reserved}/${x.limit}개 사용 중, 요청 ${x.requested}개 → 잔여 ${x.available}개)`
+  );
 }
   const handleSubmit = async () => {
     const rentalDate = typeof window !== "undefined" && localStorage.getItem("rentalDateTime"); // "YYYY-MM-DD HH-HH"

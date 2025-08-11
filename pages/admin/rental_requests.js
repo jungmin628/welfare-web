@@ -1,29 +1,20 @@
+// pages/admin/rental_requests.js
 import { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
 import {
-  collection,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  doc,
-  query,
-  orderBy
+  collection, getDocs, updateDoc, deleteDoc, doc, query, orderBy
 } from "firebase/firestore";
 import Head from "next/head";
+import RequireAuth from "../../components/RequireAuth";
 
-export default function AdminRentalRequests() {
+/** 인증 통과 후에만 렌더되는 실제 관리자 화면 */
+function AdminRentalRequestsInner() {
   const [requests, setRequests] = useState([]);
 
   const fetchRequests = async () => {
-    const q = query(
-      collection(db, "rental_requests"),
-      orderBy("timestamp", "desc")
-    );
+    const q = query(collection(db, "rental_requests"), orderBy("timestamp", "desc"));
     const snapshot = await getDocs(q);
-    const list = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
+    const list = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     setRequests(list);
   };
 
@@ -92,72 +83,30 @@ export default function AdminRentalRequests() {
       </div>
 
       <style jsx>{`
-        .container {
-          max-width: 800px;
-          margin: 30px auto;
-          padding: 20px;
-          font-family: 'Segoe UI';
-        }
-        h2 {
-          text-align: center;
-          color: #4a54e1;
-        }
-        .card {
-          background: #fff;
-          padding: 20px;
-          border-radius: 10px;
-          box-shadow: 0 0 5px #ccc;
-          margin-bottom: 20px;
-          font-size: 15px;
-        }
-        .card h4 {
-          margin: 0 0 10px;
-        }
-        .status {
-          font-weight: bold;
-          padding: 2px 8px;
-          border-radius: 6px;
-        }
-        .status.pending {
-          background: #fff3cd;
-          color: #856404;
-        }
-        .status.approved {
-          background: #d4edda;
-          color: #155724;
-        }
-        .status.rejected {
-          background: #f8d7da;
-          color: #721c24;
-        }
-        .actions {
-          margin-top: 15px;
-        }
-        .actions button {
-          margin-right: 10px;
-          padding: 8px 16px;
-          border: none;
-          border-radius: 6px;
-          cursor: pointer;
-          font-weight: bold;
-        }
-        .approve {
-          background: #4caf50;
-          color: white;
-        }
-        .reject {
-          background: #f44336;
-          color: white;
-        }
-        ul {
-          padding-left: 20px;
-          margin: 5px 0;
-        }
-        a {
-          color: #4a54e1;
-          text-decoration: underline;
-        }
+        .container { max-width: 800px; margin: 30px auto; padding: 20px; font-family: 'Segoe UI'; }
+        h2 { text-align: center; color: #4a54e1; }
+        .card { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 0 5px #ccc; margin-bottom: 20px; font-size: 15px; }
+        .card h4 { margin: 0 0 10px; }
+        .status { font-weight: bold; padding: 2px 8px; border-radius: 6px; }
+        .status.pending { background: #fff3cd; color: #856404; }
+        .status.approved { background: #d4edda; color: #155724; }
+        .status.rejected { background: #f8d7da; color: #721c24; }
+        .actions { margin-top: 15px; }
+        .actions button { margin-right: 10px; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .approve { background: #4caf50; color: white; }
+        .reject { background: #f44336; color: white; }
+        ul { padding-left: 20px; margin: 5px 0; }
+        a { color: #4a54e1; text-decoration: underline; }
       `}</style>
     </>
+  );
+}
+
+/** 기본 내보내기: 로그인 필요 가드 */
+export default function AdminRentalRequests() {
+  return (
+    <RequireAuth>
+      <AdminRentalRequestsInner />
+    </RequireAuth>
   );
 }

@@ -177,7 +177,22 @@ export default function SubmitPage() {
           <label>대여 사유 (대여와 반납시간 별개로, 행사 운영날짜와 시간을 적어주세요.)</label>
           <textarea name="reason" rows={2} placeholder="예: 9월 1일 10시~17시 개강행사" onChange={handleChange} />
 
-          <label>집회신고서 첨부(3MB 이하)</label>
+          <label>집회신고서 첨부<br /> * 서명이 완료된 3MB 이하 이미지로 제출</label>
+          
+          <details className="example-toggle">
+            <summary>집회신고서 예시 보기</summary>
+            <div className="example-img-wrap">
+              <a href="/물품대여용 집회신고서.hwp" download>물품신청서 제출용 집회신고서 파일 다운로드하기</a>
+              <br />
+              <img
+                src="/집회신고서.png"
+                alt="집회신고서 예시 이미지"
+                className="example-img"
+              />
+              <p className="example-tip">위의 예시와 같이 작성 후, 이미지파일로 제출해주세요.</p>
+            </div>
+          </details>
+          <br />
           <input type="file" name="file" onChange={handleChange} />
 
           <button type="submit">신청서 제출</button>
@@ -244,6 +259,46 @@ export default function SubmitPage() {
           font-size: 15px;
           border: none;
           cursor: pointer;
+        }
+          .example-toggle {
+          margin-top: 8px;
+          border: 1px solid #eee;
+          border-radius: 8px;
+          padding: 8px 10px;
+          background: #fafafa;
+        }
+        .example-toggle > summary {
+          cursor: pointer;
+          font-weight: 600;
+          list-style: none;
+        }
+        .example-toggle > summary::-webkit-details-marker {
+          display: none;
+        }
+        .example-toggle > summary::after {
+          content: "▼";
+          float: right;
+          transform: translateY(2px);
+          font-size: 12px;
+          opacity: 0.6;
+        }
+        .example-toggle[open] > summary::after {
+          content: "▲";
+        }
+        .example-img-wrap {
+          margin-top: 10px;
+        }
+        .example-img {
+          max-width: 100%;
+          height: auto;
+          border: 1px solid #eee;
+          border-radius: 8px;
+          display: block;
+        }
+        .example-tip {
+          margin-top: 6px;
+          font-size: 12px;
+          color: #666;
         }
       `}</style>
     </>

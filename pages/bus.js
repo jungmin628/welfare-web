@@ -22,10 +22,11 @@ export default function BusRental() {
               ※ 서류 양식 및 문의는 학생복지위원회에 문의해주세요.
             </p>
           </div>
-          <div className="contact-wrapper">
-            <div className="contact-button">
-              ☎ 학생복지위원장 유재범 : 010-5049-4135
-            </div>
+<div className="contact-wrapper">
+  <a href="tel:01050494135" className="contact-button">
+   학생복지위원회 위원장 유재범 <br /> ☏ 010-5049-4135
+  </a>
+
           </div>
         </div>
       </div>
@@ -75,26 +76,27 @@ export default function BusRental() {
         }
 
         .contact-wrapper {
-          display: flex;
-          justify-content: flex-start;
-        }
+  display: flex;
+  justify-content: center; /* 가운데 정렬 */
+}
 
-        .contact-button {
-          background-color: #6b46c1;
-          color: white;
-          padding: 12px 24px;
-          border-radius: 100px;
-          font-size: 14px;
-          font-weight: 600;
-          cursor: default;
-          user-select: none;
-          box-shadow: 0 4px 12px rgba(107, 70, 193, 0.4);
-          transition: background-color 0.3s ease;
-        }
+.contact-button {
+  display: inline-block;
+  background-color: #6b46c1;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 100px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center; /* 텍스트 가운데 정렬 */
+  text-decoration: none; /* a 태그 밑줄 제거 */
+  box-shadow: 0 4px 12px rgba(107, 70, 193, 0.4);
+  transition: background-color 0.3s ease;
+}
 
-        .contact-button:hover {
-          background-color: #553c9a;
-        }
+.contact-button:hover {
+  background-color: #553c9a;
+}
       `}</style>
     </>
   );

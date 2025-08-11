@@ -28,8 +28,16 @@ export default function ReturnPage() {
     "2025-08-15", "2025-09-10", "2025-10-03", "2025-12-25"
   ];
 
-  const timeSlots = ["10-11", "11-12", "12-13", "13-14", "14-15", "15-16", "16-17"];
+  const timeSlots = ["11-12", "12-13", "13-14", "14-15", "15-16", "16-17"];
 
+  // 금요일에만 보여줄 슬롯 (서버 포맷 동일)
+  const FRIDAY_SLOTS = ["11-12", "12-13"];
+
+function getWeekdayFromYMD(ymd) {
+  if (!ymd) return null;
+  const [y, m, d] = ymd.split("-").map(Number);
+  return new Date(y, m - 1, d).getDay(); // 5가 금요일
+}
   const renderCalendar = () => {
     const grid = gridRef.current;
     const label = labelRef.current;
@@ -157,21 +165,30 @@ export default function ReturnPage() {
         <p id="selectedDate">선택된 날짜: {selectedDate || "없음"}</p>
 
         {selectedDate && (
-          <div className="time-slot-container">
-            <h4>시간대 선택</h4>
-            <div className="time-slot-buttons">
-              {timeSlots.map((slot) => (
-                <button
-                  key={slot}
-                  className={`time-slot-btn ${selectedTime === slot ? "selected-time" : ""}`}
-                  onClick={() => handleTimeSelect(slot)}
-                >
-                  {slot}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+  <div className="time-slot-container">
+    <h4>시간대 선택</h4>
+
+    {(() => {
+      const day = getWeekdayFromYMD(selectedDate);
+      const isFriday = day === 5;
+      const slotsToShow = isFriday ? FRIDAY_SLOTS : timeSlots;
+
+      return (
+        <div className="time-slot-buttons">
+          {slotsToShow.map((slot) => (
+            <button
+              key={slot}
+              className={`time-slot-btn ${selectedTime === slot ? "selected-time" : ""}`}
+              onClick={() => handleTimeSelect(slot)}
+            >
+              {slot}
+            </button>
+          ))}
+        </div>
+      );
+    })()}
+  </div>
+)}
 
         <Link
           href="/rental_items"

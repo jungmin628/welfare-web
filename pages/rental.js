@@ -17,24 +17,38 @@ export default function RentalPage() {
   const [showCalendar, setShowCalendar] = useState(false);
 
   useEffect(() => {
+  // 1) Next.js SPA 내 이전 페이지가 있는지 (초기 로드 idx=0, 그 외 >0)
+  const hasPrevByIdx = typeof window !== "undefined" && window.history?.state?.idx > 0;
 
-    const goCheck = confirm(
-      "📢 승인된 대여 일정을 확인하시겠어요?\n(확인: 일정 보기 / 취소: 바로 대여일 선택)"
-    );
+  // 2) 직전 페이지가 같은 오리진의 /schedule 인지
+  const sameOrigin = typeof window !== "undefined" && document.referrer.startsWith(window.location.origin);
+  const fromSchedule = sameOrigin && new URL(document.referrer).pathname === "/schedule";
 
-    if (goCheck) {
-      // 확인 누르면 /schedule 로 이동
-      router.push("/schedule?from=rental");
-      return; // 이동하므로 렌더 진행 X
-    }
-
-    // 취소 누르면 달력 바로 표시
-        alert(
+  if (hasPrevByIdx || fromSchedule) {
+    // ✅ 이전 페이지가 있을 때: confirm 없이 바로 안내만 띄우고 달력 표시
+    alert(
       "📢 대여는 행사 시작 전날 또는 당일에만 가능합니다. 이전에는 대여가 불가능합니다. \n\n 📢 신청한 대여시간을 꼭 준수해주시기 바랍니다. 차후 불이익이 생길 수 있습니다. "
     );
-
     setShowCalendar(true);
-  }, [router]);
+    return;
+  }
+
+  // ❗ 최초 진입(이전 페이지 없음): 스케줄 확인 여부 먼저 묻기
+  const goCheck = confirm(
+    "📢 학생복지위원회 물품대여 일정을 확인하시겠어요?\n(확인: 일정 보기 / 취소: 바로 대여일 선택)"
+  );
+
+  if (goCheck) {
+    router.push("/schedule?from=rental");
+    return; // 이동
+  }
+
+  alert(
+    "📢 대여는 행사 시작 전날 또는 당일에만 가능합니다. 이전에는 대여가 불가능합니다. \n\n 📢 신청한 대여시간을 꼭 준수해주시기 바랍니다. 차후 불이익이 생길 수 있습니다. "
+  );
+  setShowCalendar(true);
+}, [router]);
+
   
   function formatDate(date) {
   const y = date.getFullYear();
@@ -49,8 +63,16 @@ export default function RentalPage() {
     "2025-08-15", "2025-09-10", "2025-10-03", "2025-12-25"
   ];
 
-  const timeSlots = ["10-11", "11-12", "12-13", "13-14", "14-15", "15-16", "16-17"];
+  const timeSlots = ["11-12", "12-13", "13-14", "14-15", "15-16", "16-17"];
 
+// 금요일에만 보여줄 슬롯 (서버 포맷 동일)
+const FRIDAY_SLOTS = ["11-12", "12-13"];
+
+function getWeekdayFromYMD(ymd) {
+  if (!ymd) return null;
+  const [y, m, d] = ymd.split("-").map(Number);
+  return new Date(y, m - 1, d).getDay(); // 5가 금요일
+}
   const renderCalendar = () => {
     const grid = gridRef.current;
     const label = labelRef.current;
@@ -183,21 +205,30 @@ cell.appendChild(numberSpan);
         <p id="selectedDate">선택된 날짜: {selectedDate || "없음"}</p>
 
         {selectedDate && (
-          <div className="time-slot-container">
-            <h4>시간대 선택</h4>
-            <div className="time-slot-buttons">
-              {timeSlots.map((slot) => (
-                <button
-                  key={slot}
-                  className={`time-slot-btn ${selectedTime === slot ? "selected-time" : ""}`}
-                  onClick={() => handleTimeSelect(slot)}
-                >
-                  {slot}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+  <div className="time-slot-container">
+    <h4>시간대 선택</h4>
+
+    {(() => {
+      const day = getWeekdayFromYMD(selectedDate);
+      const isFriday = day === 5;
+      const slotsToShow = isFriday ? FRIDAY_SLOTS : timeSlots;
+
+      return (
+        <div className="time-slot-buttons">
+          {slotsToShow.map((slot) => (
+            <button
+              key={slot}
+              className={`time-slot-btn ${selectedTime === slot ? "selected-time" : ""}`}
+              onClick={() => handleTimeSelect(slot)}
+            >
+              {slot}
+            </button>
+          ))}
+        </div>
+      );
+    })()}
+  </div>
+)}
 
         <Link
           href="/return"
@@ -274,7 +305,7 @@ cell.appendChild(numberSpan);
         .calendar-cell {
           display: flex;
           justify-content: center;
-          align-item: center;
+          align-items: center;
           padding: 12px 0;
           text-align: center;
           background: #f0f0f0;

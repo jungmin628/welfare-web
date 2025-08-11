@@ -1,92 +1,26 @@
-import Head from "next/head";
-import { useRouter } from "next/router";
-import { useState } from "react";
+// pages/admin/index.js
+import Link from "next/link";
 
-export default function AdminMainPage() {
-  const router = useRouter();
-  const [accessGranted, setAccessGranted] = useState(false);
-  const [passwordInput, setPasswordInput] = useState("");
+export default function AdminHome() {
+  // 이 페이지는 실제로 렌더 안 되고 리다이렉트만 수행
+  return null;
+}
 
-  const handlePasswordSubmit = () => {
-    if (passwordInput === "gkrqhrdnlvkdlxld!") {
-      setAccessGranted(true);
-    } else {
-      alert("비밀번호가 틀렸습니다.");
-    }
-  };
+export async function getServerSideProps({ req }) {
+  const { admin } = await import("../../lib/firebaseAdmin");
+  const cookies = req.headers.cookie || "";
+  const match = cookies.match(/(?:^|;\s*)session=([^;]+)/);
+  const session = match ? match[1] : null;
 
-  return (
-    <>
-      <Head>
-        <title>관리자 페이지</title>
-      </Head>
+  if (!session) {
+    return { redirect: { destination: "/login", permanent: false } };
+  }
 
-      <div className="admin-container">
-        {!accessGranted ? (
-          <div className="login-box">
-            <h2>🔒 관리자 페이지</h2>
-            <input
-              type="password"
-              placeholder="비밀번호 입력"
-              value={passwordInput}
-              onChange={(e) => setPasswordInput(e.target.value)}
-            />
-            <button onClick={handlePasswordSubmit}>입장하기</button>
-          </div>
-        ) : (
-          <>
-            <h1>📋 관리자 페이지</h1>
-            <nav>
-              <button onClick={() => router.push("/admin/notices")}>📢 공지사항 관리</button>
-              <button onClick={() => router.push("/admin/rental_requests")}>📦 대여 신청 관리</button>
-            </nav>
-          </>
-        )}
-      </div>
-
-      <style jsx>{`
-        .admin-container {
-          font-family: 'Segoe UI', sans-serif;
-          text-align: center;
-          background-color: #f5f5ff;
-          padding: 60px;
-          min-height: 100vh;
-        }
-
-        h1, h2 {
-          color: #4a54e1;
-          margin-bottom: 40px;
-        }
-
-        nav {
-          display: flex;
-          justify-content: center;
-          gap: 20px;
-        }
-
-        button {
-          padding: 15px 30px;
-          font-size: 16px;
-          font-weight: bold;
-          background-color: #7b68ee;
-          color: white;
-          border: none;
-          border-radius: 10px;
-          cursor: pointer;
-        }
-
-        button:hover {
-          background-color: #5f55d1;
-        }
-
-        .login-box input {
-          padding: 10px;
-          font-size: 16px;
-          margin-right: 10px;
-          border-radius: 5px;
-          border: 1px solid #ccc;
-        }
-      `}</style>
-    </>
-  );
+  try {
+    await admin.auth().verifySessionCookie(session, true);
+    // ✅ 로그인만 돼 있으면 rental_requests로
+    return { redirect: { destination: "/admin/rental_requests", permanent: false } };
+  } catch {
+    return { redirect: { destination: "/login", permanent: false } };
+  }
 }

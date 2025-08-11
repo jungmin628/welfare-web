@@ -56,6 +56,9 @@ export default function IntroPage() {
         </a>
 
         <div className="intro-btn-group">
+          <Link href="/notice" className="intro-btn">
+            자주하는 질문
+          </Link>
           <Link href="/location" className="intro-btn">
             학생복지위원회실 위치·운영시간
           </Link>
@@ -65,9 +68,7 @@ export default function IntroPage() {
           <Link href="/organization" className="intro-btn">
             조직도
           </Link>
-          <Link href="/notice" className="intro-btn">
-            자주하는 질문
-          </Link>
+          
         </div>
 
         <Link href="/main" className="back-btn">

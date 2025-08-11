@@ -221,10 +221,11 @@ export default function SubmitPage() {
         }
         input, textarea {
           width: 100%;
-          padding: 8px 10px;
+          padding: 5px 8px;
           border: 1px solid #ccc;
           border-radius: 6px;
           font-size: 14px;
+          box-sizing: border-box;
         }
         input[readonly], textarea[readonly] {
           background: #eee;

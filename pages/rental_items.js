@@ -9,6 +9,17 @@ export default function RentalItemsPage() {
   const [quantities, setQuantities] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
+  // ✅ 최초 로드 시 날짜 선택 여부 검증 (없으면 rental로 되돌림)
+  useEffect(() => {
+    const start = typeof window !== "undefined" && localStorage.getItem("rentalDateTime"); // 예: "2025-08-19 13-14"
+    const end   = typeof window !== "undefined" && localStorage.getItem("returnDateTime"); // 예: "2025-08-20 15-16"
+    if (!start || !end) {
+      alert("대여/반납 날짜를 먼저 선택해주세요.");
+      router.push("/rental");
+      return;
+    }
+  }, [router]);
+
   useEffect(() => {
     const items = [
       { name: "천막", max: 10 },
@@ -38,14 +49,15 @@ export default function RentalItemsPage() {
     setInventory(items);
   }, []);
 
-  const handleChange = (name, value) => {
-    const intValue = Math.max(0, Math.min(Number(value) || 0, getMax(name)));
-    setQuantities((prev) => ({ ...prev, [name]: intValue }));
-  };
-
   const getMax = (name) => {
     const found = inventory.find((i) => i.name === name);
     return found?.max ?? Infinity;
+  };
+
+  const handleChange = (name, value) => {
+    const n = Number(value);
+    const intValue = Math.max(0, Math.min(Number.isFinite(n) ? n : 0, getMax(name)));
+    setQuantities((prev) => ({ ...prev, [name]: intValue }));
   };
 
   const increaseQty = (name, max) => {
@@ -64,54 +76,55 @@ export default function RentalItemsPage() {
     });
   };
 
+  // 전송 페이로드: [{ name, qty }]
   const itemsArray = useMemo(
     () =>
       Object.entries(quantities)
         .filter(([_, qty]) => (qty || 0) > 0)
-        .map(([name, qty]) => ({ name, qty })),
+        .map(([name, qty]) => ({ name, qty: Number(qty) })),
     [quantities]
   );
 
+  // 서버가 돌려준 conflicts를 사용자 메시지로 요약
   function summarizeConflicts(conflicts = []) {
-  if (!Array.isArray(conflicts) || conflicts.length === 0) return [];
+    if (!Array.isArray(conflicts) || conflicts.length === 0) return [];
 
-  const map = new Map(); // date__item -> summary
-  for (const c of conflicts) {
-    const date = c.date || c.day || c.when;
-    const item = c.item || c.name;
-    if (!date || !item) continue;
+    const map = new Map(); // date__item -> summary row
+    for (const c of conflicts) {
+      const date = c.date || c.day || c.when;
+      const item = c.item || c.name;
+      if (!date || !item) continue;
 
-    // 안전 보정
-    const limit     = Number(c.limit ?? c.max ?? 0);
-    const reserved  = Number(c.reserved ?? c.count ?? c.qty ?? 0);
-    const requested = Number(c.requested ?? c.req ?? 0);
-    // available이 안 왔으면 계산
-    const available = Number(c.available ?? (limit ? Math.max(0, limit - reserved) : 0));
+      const limit     = Number(c.limit ?? c.max ?? 0);
+      const reserved  = Number(c.reserved ?? c.count ?? c.qty ?? 0);
+      const requested = Number(c.requested ?? c.req ?? 0);
+      const available = Number(c.available ?? (limit ? Math.max(0, limit - reserved) : 0));
 
-    const key = `${date}__${item}`;
-    const prev = map.get(key);
-    if (!prev) {
-      map.set(key, { date, item, limit, reserved, requested, available });
-    } else {
-      // 같은 날짜·품목이 여러 줄이면 동시 최대치 기준으로 갱신
-      prev.reserved  = Math.max(prev.reserved, reserved);
-      prev.requested = Math.max(prev.requested, requested);
-      prev.available = Math.min(prev.available, available);
-      prev.limit     = prev.limit || limit;
+      const key = `${date}__${item}`;
+      const prev = map.get(key);
+      if (!prev) {
+        map.set(key, { date, item, limit, reserved, requested, available });
+      } else {
+        prev.reserved  = Math.max(prev.reserved, reserved);
+        prev.requested = Math.max(prev.requested, requested);
+        prev.available = Math.min(prev.available, available);
+        prev.limit     = prev.limit || limit;
+      }
     }
+
+    return Array.from(map.values()).map(
+      (x) =>
+        `${x.date} · ${x.item} (보유 ${x.limit}개, 이미 ${x.reserved}개 사용, 요청 ${x.requested}개 → 잔여 ${x.available}개)`
+    );
   }
 
-  return Array.from(map.values()).map(
-    (x) =>
-      `${x.date} · ${x.item} (기존 ${x.reserved}/${x.limit}개 사용 중, 요청 ${x.requested}개 → 잔여 ${x.available}개)`
-  );
-}
   const handleSubmit = async () => {
     const rentalDate = typeof window !== "undefined" && localStorage.getItem("rentalDateTime"); // "YYYY-MM-DD HH-HH"
     const returnDate = typeof window !== "undefined" && localStorage.getItem("returnDateTime"); // "YYYY-MM-DD HH-HH"
 
     if (!rentalDate || !returnDate) {
-      alert("날짜를 먼저 선택해주세요.");
+      alert("대여/반납 날짜를 먼저 선택해주세요.");
+      router.push("/rental");
       return;
     }
     if (itemsArray.length === 0) {
@@ -121,6 +134,7 @@ export default function RentalItemsPage() {
 
     try {
       setSubmitting(true);
+
       const res = await fetch("/api/check-availability", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -128,32 +142,32 @@ export default function RentalItemsPage() {
       });
 
       if (!res.ok) {
-        // 텍스트로 먼저 읽고 메시지 표시
         const text = await res.text();
         throw new Error(`API ${res.status} ${res.statusText}: ${text || "(no body)"}`);
       }
 
       const result = await res.json();
 
+      // ✅ 서버 응답 스키마 반영 (ok / available)
       if (!result.ok) {
         alert("오류가 발생했습니다: " + (result.error || "알 수 없는 오류"));
         return;
       }
 
-      if (result.available) {
-        const rentalItemsObj = Object.fromEntries(itemsArray.map(i => [i.name, i.qty]));
-        localStorage.setItem("rentalItems", itemsArray.map(i => `${i.name}: ${i.qty}`).join("\n"));
-        localStorage.setItem("rentalItemsObject", JSON.stringify(rentalItemsObj));
-
-        alert("✅ 재고가 남아있습니다! 확인 후 물품신청서를 작성해주세요.");
-        router.push("/submit");
-      } else {
+      if (!result.available) {
         const lines = summarizeConflicts(result.conflicts || []);
-        const body = lines.length
-        ? `- ${lines.join("\n- ")}`
-          : "(사유 정보를 불러오지 못했습니다)";
+        const body = lines.length ? `- ${lines.join("\n- ")}` : "(사유 정보를 불러오지 못했습니다)";
         alert(`❌ 대여 불가\n${body}`);
+        return;
       }
+
+      // 통과 → 다음 단계로 이동
+      const rentalItemsObj = Object.fromEntries(itemsArray.map(i => [i.name, i.qty]));
+      localStorage.setItem("rentalItems", itemsArray.map(i => `${i.name}: ${i.qty}`).join("\n"));
+      localStorage.setItem("rentalItemsObject", JSON.stringify(rentalItemsObj));
+
+      alert("✅ 재고가 남아있습니다! 확인 후 물품신청서를 작성해주세요.");
+      router.push("/submit");
     } catch (e) {
       console.error(e);
       alert(`네트워크/서버 오류: ${e.message}`);
@@ -171,9 +185,8 @@ export default function RentalItemsPage() {
         <h5>
           <dl> ✅ 지정된 최대 갯수를 초과하여 대여 원할 경우, <br />우선 최대 갯수로 신청하시고 부위원장에게 따로 연락 바랍니다. </dl>
           <dl> ✅ 필요 수량만큼만 신청해주시기 바랍니다. </dl>
-          
-          
         </h5>
+
         <div className="item-list">
           {inventory.map(({ name, max }) => (
             <div key={name} className="item-card">

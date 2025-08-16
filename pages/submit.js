@@ -141,7 +141,7 @@ export default function SubmitPage() {
           <input name="department" required onChange={handleChange} />
 
           <label>학번</label>
-          <input name="grade" required placeholder="20xxxxxx(8" onChange={handleChange} />
+          <input name="grade" required placeholder="20xxxxxx(8자)" onChange={handleChange} />
 
           <label>대표자 이름</label>
           <input name="repName" required onChange={handleChange} />

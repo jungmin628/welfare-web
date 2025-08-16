@@ -8,15 +8,11 @@ function initAdmin() {
   let credsRaw = process.env.FIREBASE_ADMIN_CREDENTIALS_JSON;
   if (!credsRaw) throw new Error("FIREBASE_ADMIN_CREDENTIALS_JSON is not set");
 
-  // base64면 디코딩 시도, JSON이면 그대로 사용
   try {
     const decoded = Buffer.from(credsRaw, "base64").toString("utf8");
     JSON.parse(decoded);
     credsRaw = decoded;
-  } catch (_) {
-    // 이미 JSON 문자열인 경우 통과
-  }
-
+  } catch (_) {}
   const serviceAccount = JSON.parse(credsRaw);
   admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
 }
@@ -50,6 +46,18 @@ const ITEM_LIMITS = {
   "줄다리기 줄 25m": 1,
   "중형 화이트보드": 1,
 };
+
+/** --- 수량 파서: "3개", " 7 ", 7, "x3" 등에서 정수 추출 --- */
+function parseQty(val) {
+  if (val == null) return 0;
+  if (typeof val === "number" && Number.isFinite(val)) return Math.max(0, Math.trunc(val));
+  if (typeof val === "string") {
+    const m = val.match(/(\d+)/); // 첫 번째 정수 추출
+    if (m) return Math.max(0, parseInt(m[1], 10));
+    return 0;
+  }
+  return 0;
+}
 
 /** --- 헬퍼: 문자열에서 날짜(YYYY-MM-DD)만 뽑기 --- */
 function dateOnlyAny(input) {
@@ -101,15 +109,24 @@ function isApprovedStatus(val) {
 function normalizeItems(items) {
   if (Array.isArray(items)) {
     return items
-      .map((it) => ({
-        name: it?.name || it?.itemName,
-        qty: Number(it?.qty ?? it?.quantity ?? 0),
-      }))
+      .map((it) => {
+        const name = (it?.name || it?.itemName || "").toString().trim();
+        const qty =
+          parseQty(it?.qty) ||
+          parseQty(it?.quantity) ||
+          parseQty(it?.count) ||
+          0;
+        return { name, qty };
+      })
       .filter((it) => it.name && it.qty > 0);
   }
   if (items && typeof items === "object") {
     return Object.entries(items)
-      .map(([name, qty]) => ({ name, qty: Number(qty) || 0 }))
+      .map(([rawName, rawQty]) => {
+        const name = (rawName || "").toString().trim();
+        const qty = parseQty(rawQty);
+        return { name, qty };
+      })
       .filter((it) => it.name && it.qty > 0);
   }
   return [];
@@ -139,7 +156,6 @@ export default async function handler(req, res) {
 
     // --- 승인된 예약만 집계 ---
     const snap = await db.collection("rental_requests").get();
-    let approvedDocsCount = 0;
 
     // 날짜·품목별 기존 예약 합계
     const reservedByDayItem = new Map(); // key: YYYY-MM-DD__품목 -> 수량 합계
@@ -156,8 +172,6 @@ export default async function handler(req, res) {
       const list = normalizeItems(d?.items || d?.rentalItems || d?.itemsObject);
       if (!list.length) return;
 
-      approvedDocsCount++;
-
       for (const day of days) {
         for (const { name, qty } of list) {
           const key = `${day}__${name}`;
@@ -166,22 +180,22 @@ export default async function handler(req, res) {
       }
     });
 
-    // --- 요청과 비교: 날짜·품목 당 한 레코드 ---
+    // --- 요청과 비교: 날짜·품목 단위로 검증 ---
     const conflicts = [];
     for (const day of reqDays) {
       for (const { name, qty } of reqItems) {
-        const limit = ITEM_LIMITS[name] ?? Infinity;
+        const limit = ITEM_LIMITS[name] ?? 0; // 등록되지 않은 품목은 0으로 처리
         const reserved = reservedByDayItem.get(`${day}__${name}`) || 0;
         const available = Math.max(0, limit - reserved);
 
         if (reserved + qty > limit) {
           conflicts.push({
-            date: day,            // YYYY-MM-DD
-            item: name,           // 품목명
-            reserved,             // 그 날 이미 예약된 총 수량
-            limit,                // 보유 한도
-            requested: qty,       // 이번 요청 수량
-            available,            // 현재 잔여(요청 전)
+            date: day,
+            item: name,
+            reserved,
+            limit,
+            requested: qty,
+            available,
           });
         }
       }
@@ -189,10 +203,9 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       ok: true,
-      policy: "per-item-per-day", // 참고용
-      approvedDocsCount,
+      policy: "per-item-per-day",
       available: conflicts.length === 0,
-      conflicts, // 항상 같은 스키마(date,item,reserved,limit,requested,available)
+      conflicts,
     });
   } catch (err) {
     console.error(err);

@@ -30,9 +30,34 @@ export default function SchedulePage() {
   // 날짜/시간 포맷터
   const pad2 = (n) => String(n).padStart(2, "0");
   const fmtDate = (d) => `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
-  const fmtHour = (d) => {
-  const hour = d.getHours() + 1;
-  return `${pad2(hour)}시`;
+  // 숫자만 반환하도록 (여기선 "시"를 붙이지 않음)
+  const getHourNum = (d) => d.getHours();
+
+  
+    function pickDisplayHours(info) {
+    const ext = info.event.extendedProps || {};
+    let rentalStartHour = null;
+    let returnEndHour = null;
+
+    if (Number.isInteger(ext.rentalHourStart)) rentalStartHour = ext.rentalHourStart;
+    if (Number.isInteger(ext.returnHourEnd))   returnEndHour  = ext.returnHourEnd;
+
+    if (!rentalStartHour && typeof ext.rentalTimeRange === "string") {
+      const m = ext.rentalTimeRange.match(/(\d{1,2})\s*[-~]\s*(\d{1,2})/);
+      if (m) rentalStartHour = parseInt(m[1], 10);
+    }
+    if (!returnEndHour && typeof ext.returnTimeRange === "string") {
+      const m = ext.returnTimeRange.match(/(\d{1,2})\s*[-~]\s*(\d{1,2})/);
+      if (m) returnEndHour = parseInt(m[2], 10);
+    }
+
+    const s = info.event.start;
+    const e = info.event.end || s;
+    if (!Number.isInteger(rentalStartHour)) rentalStartHour = getHourNum(s);
+    if (!Number.isInteger(returnEndHour))   returnEndHour   = getHourNum(e);
+
+    return { rentalStartHour, returnEndHour, s, e };
+  }
 };
 
   // 커스텀 렌더: 날짜 / 시간 분리 노출
@@ -73,7 +98,7 @@ export default function SchedulePage() {
       <Link href="/" className="next-btn">메인으로</Link>
     </div>
   );
-}
+
 
 // 스타일(기존 유지)
 const containerStyle = { maxWidth:'900px', margin:'40px auto', padding:'30px', backgroundColor:'#f9f9ff', borderRadius:'20px', boxShadow:'0 0 15px rgba(0,0,0,0.1)' };

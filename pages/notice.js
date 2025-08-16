@@ -70,6 +70,7 @@ export default function FAQPage() {
         {/* FAQ 아코디언 */}
         <div className="faq-wrap">
           {faqs.map(({ q, a }, i) => (
+            <strong>
             <details key={i} className="faq-item">
               <summary className="faq-summary">
                 <span className="faq-q">{q}</span>
@@ -79,6 +80,7 @@ export default function FAQPage() {
                 <p>{a}</p>
               </div>
             </details>
+            </strong>
           ))}
         </div>
 

@@ -60,7 +60,7 @@ function AdminRentalRequestsInner() {
               </ul>
 
               <p><strong>대여 사유:</strong> {req.reason || "-"}</p>
-              <p><strong>비고:</strong> {req.note || "-"}</p>
+              <p><strong>기타문의사항:</strong> {req.qna || "-"}</p>
 
               {req.fileName && req.fileData && (
                 <p>

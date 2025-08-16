@@ -1,3 +1,4 @@
+// pages/return.js
 import { useEffect, useRef, useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
@@ -18,10 +19,8 @@ export default function ReturnPage() {
     const d = String(date.getDate()).padStart(2, "0");
     return `${y}-${m}-${d}`;
   }
-  useEffect(() => {
 
-  
-}, []);
+  // (빈 useEffect 제거) — 필요 없는 빈 훅은 제거해도 됩니다.
 
   const holidays = [
     "2025-01-01", "2025-03-01", "2025-05-05", "2025-06-06",
@@ -29,15 +28,14 @@ export default function ReturnPage() {
   ];
 
   const timeSlots = ["11-12", "12-13", "13-14", "14-15", "15-16", "16-17"];
+  const FRIDAY_SLOTS = ["11-12", "12-13"]; // 금요일 전용
 
-  // 금요일에만 보여줄 슬롯 (서버 포맷 동일)
-  const FRIDAY_SLOTS = ["11-12", "12-13"];
+  function getWeekdayFromYMD(ymd) {
+    if (!ymd) return null;
+    const [y, m, d] = ymd.split("-").map(Number);
+    return new Date(y, m - 1, d).getDay(); // 5 = 금요일
+  }
 
-function getWeekdayFromYMD(ymd) {
-  if (!ymd) return null;
-  const [y, m, d] = ymd.split("-").map(Number);
-  return new Date(y, m - 1, d).getDay(); // 5가 금요일
-}
   const renderCalendar = () => {
     const grid = gridRef.current;
     const label = labelRef.current;
@@ -91,7 +89,7 @@ function getWeekdayFromYMD(ymd) {
         cell.onclick = () => {
           setSelectedDate(formatted);
           setSelectedTime(null);
-          localStorage.setItem("returnDate", formatted);
+          localStorage.setItem("returnDate", formatted); // ✅ 반납 '날짜' 저장
           document.querySelectorAll(".calendar-cell").forEach(c => c.classList.remove("selected"));
           cell.classList.add("selected");
           document.getElementById("selectedDate").textContent = `선택된 날짜: ${formatted}`;
@@ -106,19 +104,26 @@ function getWeekdayFromYMD(ymd) {
     }
   };
 
-const handleTimeSelect = (slot) => {
-     setSelectedTime(slot);
-  const fullDateTime = `${selectedDate} ${slot}`;
-  localStorage.setItem("rentalDateTime", fullDateTime);
-  if (nextBtnRef.current) nextBtnRef.current.style.display = "block";
+  const handleTimeSelect = (slot) => {
+    if (!selectedDate) {
+      alert("반납 날짜를 먼저 선택해주세요.");
+      return;
+    }
+    setSelectedTime(slot);
+    const fullDateTime = `${selectedDate} ${slot}`;
 
-  // ✅ 날짜와 시간 모두 선택된 시점에 한 번만 안내
-  if (selectedDate && !hasShownSelectNotice) {
-    alert(
-      "📢 반납은 행사 종료 후 평일 근무시간에만 가능합니다. \n\n 📢 신청한 대여시간을 꼭 준수해주시기 바랍니다. 차후 불이익이 생길 수 있습니다. "
-    );
-    setHasShownSelectNotice(true);
-  }
+    // ❌ (버그) rentalDateTime 으로 저장하던 부분을
+    // ✅ returnDateTime 으로 저장하도록 수정
+    localStorage.setItem("returnDateTime", fullDateTime);
+
+    if (nextBtnRef.current) nextBtnRef.current.style.display = "block";
+
+    if (selectedDate && !hasShownSelectNotice) {
+      alert(
+        "📢 반납은 행사 종료 후 평일 근무시간에만 가능합니다.\n\n📢 신청한 반납시간을 꼭 준수해주시기 바랍니다. 차후 불이익이 생길 수 있습니다."
+      );
+      setHasShownSelectNotice(true);
+    }
   };
 
   const changeMonth = (offset) => {
@@ -129,6 +134,7 @@ const handleTimeSelect = (slot) => {
   };
 
   useEffect(() => {
+    // 저장된 선택값 복원 (키 이름 일치)
     const saved = localStorage.getItem("returnDate");
     const savedTime = localStorage.getItem("returnDateTime");
     if (saved) setSelectedDate(saved);
@@ -151,7 +157,8 @@ const handleTimeSelect = (slot) => {
       <div className="calendar">
         <h2 className="title">📅 반납일 선택</h2>
         <h5 className="title">주말, 공휴일은 선택할 수 없습니다. 행사 종료 후 평일로 선택해주세요.</h5>
-        <h5 className="title">대여/반납 시간을 반드시 준수 해주시기 바랍니다. </h5>
+        <h5 className="title">대여/반납 시간을 반드시 준수 해주시기 바랍니다.</h5>
+
         <div className="calendar-controls">
           <button onClick={() => changeMonth(-1)}>← 이전</button>
           <span ref={labelRef}></span>
@@ -173,30 +180,28 @@ const handleTimeSelect = (slot) => {
         <p id="selectedDate">선택된 날짜: {selectedDate || "없음"}</p>
 
         {selectedDate && (
-  <div className="time-slot-container">
-    <h4>시간대 선택</h4>
-
-    {(() => {
-      const day = getWeekdayFromYMD(selectedDate);
-      const isFriday = day === 5;
-      const slotsToShow = isFriday ? FRIDAY_SLOTS : timeSlots;
-
-      return (
-        <div className="time-slot-buttons">
-          {slotsToShow.map((slot) => (
-            <button
-              key={slot}
-              className={`time-slot-btn ${selectedTime === slot ? "selected-time" : ""}`}
-              onClick={() => handleTimeSelect(slot)}
-            >
-              {slot}
-            </button>
-          ))}
-        </div>
-      );
-    })()}
-  </div>
-)}
+          <div className="time-slot-container">
+            <h4>시간대 선택</h4>
+            {(() => {
+              const day = getWeekdayFromYMD(selectedDate);
+              const isFriday = day === 5;
+              const slotsToShow = isFriday ? FRIDAY_SLOTS : timeSlots;
+              return (
+                <div className="time-slot-buttons">
+                  {slotsToShow.map((slot) => (
+                    <button
+                      key={slot}
+                      className={`time-slot-btn ${selectedTime === slot ? "selected-time" : ""}`}
+                      onClick={() => handleTimeSelect(slot)}
+                    >
+                      {slot}
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+        )}
 
         <Link
           href="/rental_items"
@@ -209,8 +214,8 @@ const handleTimeSelect = (slot) => {
         <Link href="/" className="next-btn"> 메인으로 </Link>
 
         <p className="contact-info">
-  문의사항이 생길 시, <br></br>부위원장 이정민 : 010-9426-1027 에게 연락바랍니다.
-</p>
+          문의사항이 생길 시, <br />부위원장 이정민 : 010-9426-1027 에게 연락바랍니다.
+        </p>
       </div>
 
       <style jsx>{`
@@ -222,132 +227,40 @@ const handleTimeSelect = (slot) => {
           border-radius: 12px;
           box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
-
-        .title {
-          text-align: center;
-          margin-bottom: 16px;
-        }
-
+        .title { text-align: center; margin-bottom: 16px; }
         .calendar-controls {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 10px;
-          
-
+          display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
         }
-
         .calendar-controls button {
-          background: #7b68ee;
-          color: #fff;
-          border: none;
-          padding: 6px 12px;
-          border-radius: 5px;
+          background: #7b68ee; color: #fff; border: none; padding: 6px 12px; border-radius: 5px;
         }
-
         .calendar-header {
-          display: grid;
-          grid-template-columns: repeat(7, 1fr);
-          text-align: center;
-          font-weight: bold;
-          margin-bottom: 5px;
+          display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; margin-bottom: 5px;
         }
-
-        .day-label {
-          padding: 10px 0;
-          border-bottom: 1px solid #ccc;
-        }
-
-        .day-label.sunday {
-          color: red;
-        }
-        .day-label.saturday {
-          color: red;
-        }
-
-        .calendar-grid {
-          display: grid;
-          grid-template-columns: repeat(7, 1fr);
-          gap: 5px;
-        }
-
+        .day-label { padding: 10px 0; border-bottom: 1px solid #ccc; }
+        .day-label.sunday { color: red; }
+        .day-label.saturday { color: red; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
         .calendar-cell {
-          padding: 12px 0;
-          text-align: center;
-          background: #f0f0f0;
-          border-radius: 6px;
-          cursor: pointer;
-          font-weight: bold;
+          padding: 12px 0; text-align: center; background: #f0f0f0; border-radius: 6px; cursor: pointer; font-weight: bold;
         }
-
-        .calendar-cell.empty {
-          background: transparent;
-        }
-
-        .calendar-cell.disabled {
-          background: #e0e0e0;
-          color: #aaa;
-          cursor: not-allowed;
-        }
-
-        .calendar-cell.selected {
-          background: #4a54e1;
-          color: white;
-        }
-
-        .time-slot-container {
-          margin-top: 20px;
-          text-align: center;
-        }
-
+        .calendar-cell.empty { background: transparent; }
+        .calendar-cell.disabled { background: #e0e0e0; color: #aaa; cursor: not-allowed; }
+        .calendar-cell.selected { background: #4a54e1; color: white; }
+        .time-slot-container { margin-top: 20px; text-align: center; }
         .time-slot-buttons {
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: center;
-          gap: 10px;
-          margin-top: 10px;
+          display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 10px;
         }
-
         .time-slot-btn {
-          background: #ddd;
-          padding: 8px 14px;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-          font-weight: bold;
+          background: #ddd; padding: 8px 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;
         }
-
-        .time-slot-btn:hover {
-          background: #ccc;
-        }
-
-        .time-slot-btn.selected-time {
-          background: #4a54e1;
-          color: white;
-        }
-
+        .time-slot-btn:hover { background: #ccc; }
+        .time-slot-btn.selected-time { background: #4a54e1; color: white; }
         .next-btn {
-          display: block;
-          margin: 20px auto 0;
-          text-align: center;
-          background: #4a54e1;
-          color: #fff;
-          padding: 10px;
-          border-radius: 10px;
-          text-decoration: none;
+          display: block; margin: 20px auto 0; text-align: center; background: #4a54e1; color: #fff; padding: 10px; border-radius: 10px; text-decoration: none;
         }
-
-         .contact-info {
-    margin-top: 20px;
-    font-size: 14px;
-    color: #555;
-    text-align: center;
-  }
-
-  h5{
-    text-align: center;
-    color : #ce0018;
-}
+        .contact-info { margin-top: 20px; font-size: 14px; color: #555; text-align: center; }
+        h5 { text-align: center; color: #ce0018; }
       `}</style>
     </>
   );

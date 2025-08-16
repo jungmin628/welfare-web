@@ -52,47 +52,80 @@ function parseQty(val) {
   if (val == null) return 0;
   if (typeof val === "number" && Number.isFinite(val)) return Math.max(0, Math.trunc(val));
   if (typeof val === "string") {
-    const m = val.match(/(\d+)/); // 첫 번째 정수 추출
+    const m = val.match(/(\d+)/);
     if (m) return Math.max(0, parseInt(m[1], 10));
-    return 0;
   }
   return 0;
 }
 
-/** --- 헬퍼: 문자열에서 날짜(YYYY-MM-DD)만 뽑기 --- */
-function dateOnlyAny(input) {
+/** --- KST 시각을 Date(UTC 내부 표현)로 만들기: y,m,d,h는 KST 기준 --- */
+function makeKSTDate(y, m, d, h = 0, min = 0, sec = 0, ms = 0) {
+  // JS Date는 내부적으로 UTC로 저장되므로, KST(+9)를 UTC로 바꿔 넣어줌
+  // KST 시각 (y-m-d h:min) == UTC (y-m-d h-9:min)
+  return new Date(Date.UTC(y, m - 1, d, h - 9, min, sec, ms));
+}
+
+/** --- 문자열 → [start,end) 구간으로 파싱 (KST 기준)
+ * 지원 형식:
+ *  - "YYYY-MM-DD HH-HH"   e.g., "2025-08-19 13-14" → [19일 13:00, 19일 14:00)
+ *  - "YYYY-MM-DD"         → [해당일 00:00, 다음날 00:00)
+ *  - ISO with tz          → new Date(str) 그대로 사용 (타임존 내장)
+ */
+function parseKSTRange(input) {
   if (!input) return null;
-  const s = String(input);
+  const s = String(input).trim();
 
-  // "YYYY-MM-DD HH-HH"
-  let m = s.match(/^(\d{4}-\d{2}-\d{2})\s+\d{1,2}-\d{1,2}$/);
-  if (m) return m[1];
+  // 1) "YYYY-MM-DD HH-HH"
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{1,2})\s*[-~]\s*(\d{1,2})$/);
+  if (m) {
+    const y = parseInt(m[1], 10);
+    const mm = parseInt(m[2], 10);
+    const d = parseInt(m[3], 10);
+    const h1 = parseInt(m[4], 10);
+    const h2 = parseInt(m[5], 10);
+    const start = makeKSTDate(y, mm, d, h1, 0, 0, 0);
+    const end   = makeKSTDate(y, mm, d, h2, 0, 0, 0); // 끝 시각은 배타 (정각)
+    return { start, end };
+  }
 
-  // ISO "YYYY-MM-DDTHH:mm..."
-  m = s.match(/^(\d{4}-\d{2}-\d{2})T\d{2}:\d{2}/);
-  if (m) return m[1];
+  // 2) ISO (타임존 포함이면 정확)
+  if (/^\d{4}-\d{2}-\d{2}T/.test(s)) {
+    const dt = new Date(s);
+    if (!isNaN(dt)) {
+      // ISO는 한 시점으로만 표현되므로, 보통 start/end 각각에 대해 들어올 때만 의미 있음
+      return { start: dt, end: dt }; // 호출부에서 end용으로 쓸 때 교체됨
+    }
+  }
 
-  // 날짜만
-  m = s.match(/^(\d{4}-\d{2}-\d{2})$/);
-  if (m) return m[1];
+  // 3) "YYYY-MM-DD"
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) {
+    const y = parseInt(m[1], 10);
+    const mm = parseInt(m[2], 10);
+    const d = parseInt(m[3], 10);
+    const start = makeKSTDate(y, mm, d, 0, 0, 0, 0);
+    const end   = makeKSTDate(y, mm, d + 1, 0, 0, 0, 0); // 다음날 00:00
+    return { start, end };
+  }
 
   return null;
 }
 
-/** --- 헬퍼: 날짜 구간(포함) 배열 --- */
-function eachDayInclusive(startYMD, endYMD) {
-  const [y1, m1, d1] = startYMD.split("-").map(Number);
-  const [y2, m2, d2] = endYMD.split("-").map(Number);
-  const s = new Date(y1, m1 - 1, d1);
-  const e = new Date(y2, m2 - 1, d2);
-  s.setHours(0, 0, 0, 0);
-  e.setHours(0, 0, 0, 0);
+/** --- (요청) 시작/끝 2개 입력을 [start,end)로 정규화 */
+function normalizeRequestWindow(rentalDate, returnDate) {
+  // 요청은 보통 두 문자열이 따로 옴
+  const r1 = parseKSTRange(rentalDate);
+  const r2 = parseKSTRange(returnDate);
 
-  const out = [];
-  for (let dt = new Date(s); dt <= e; dt.setDate(dt.getDate() + 1)) {
-    out.push(dt.toISOString().slice(0, 10));
-  }
-  return out;
+  if (!r1 || !r2) return null;
+
+  // ISO 단일 시점으로 들어온 경우 보정
+  const start = r1.start;
+  const end   = r2.end ?? r2.start;
+
+  // 유효성: end가 start보다 뒤여야 함
+  if (!(start instanceof Date) || !(end instanceof Date) || !(start < end)) return null;
+  return { start, end };
 }
 
 /** --- 승인 상태 정규화 --- */
@@ -132,6 +165,11 @@ function normalizeItems(items) {
   return [];
 }
 
+/** --- 겹침 판정: [aStart,aEnd) vs [bStart,bEnd) (끝은 배타) */
+function overlaps(aStart, aEnd, bStart, bEnd) {
+  return (aStart < bEnd) && (bStart < aEnd);
+}
+
 export default async function handler(req, res) {
   if (req.method === "OPTIONS") {
     res.setHeader("Allow", "POST, OPTIONS");
@@ -144,66 +182,75 @@ export default async function handler(req, res) {
 
   try {
     const { rentalDate, returnDate, items = [] } = req.body || {};
-    const start = dateOnlyAny(rentalDate);
-    const end = dateOnlyAny(returnDate);
 
-    if (!start || !end || !Array.isArray(items)) {
-      return res.status(400).json({ ok: false, error: "Missing or invalid fields" });
+    // ✅ 요청 윈도우를 시간 단위로 정규화
+    const reqWin = normalizeRequestWindow(rentalDate, returnDate);
+    if (!reqWin) {
+      return res.status(400).json({ ok: false, error: "Invalid rental/return datetime format" });
     }
+    const { start: reqStart, end: reqEnd } = reqWin;
 
-    const reqDays = eachDayInclusive(start, end);
     const reqItems = normalizeItems(items);
+    if (!reqItems.length) {
+      return res.status(400).json({ ok: false, error: "No items" });
+    }
 
     // --- 승인된 예약만 집계 ---
     const snap = await db.collection("rental_requests").get();
 
-    // 날짜·품목별 기존 예약 합계
-    const reservedByDayItem = new Map(); // key: YYYY-MM-DD__품목 -> 수량 합계
+    // 품목별 기존 점유 수량(요청 구간과 겹치는 것만)
+    const usedByItem = new Map(); // key: 품목 -> 누적 수량
 
     snap.forEach((doc) => {
       const d = doc.data();
       if (!isApprovedStatus(d?.status)) return;
 
-      const s = dateOnlyAny(d?.rentalDateTime || d?.rentalDate || d?.startDate);
-      const e = dateOnlyAny(d?.returnDateTime || d?.returnDate || d?.endDate);
-      if (!s || !e) return;
+      // DB에 저장된 필드에서 시작/끝을 시간단위로 파싱
+      // rentalDateTime / returnDateTime이 "YYYY-MM-DD HH-HH" 형식이라면 정확히 처리됨
+      // 과거 데이터가 "YYYY-MM-DD"만 있을 수도 있으므로 parseKSTRange가 커버함
+      const rStart = parseKSTRange(d?.rentalDateTime || d?.rentalDate || d?.startDate);
+      const rEnd   = parseKSTRange(d?.returnDateTime || d?.returnDate || d?.endDate);
+      if (!rStart || !rEnd) return;
 
-      const days = eachDayInclusive(s, e);
+      const aStart = rStart.start;
+      const aEnd   = rEnd.end ?? rEnd.start; // end가 없으면 start 사용
+
+      if (!overlaps(reqStart, reqEnd, aStart, aEnd)) return;
+
       const list = normalizeItems(d?.items || d?.rentalItems || d?.itemsObject);
       if (!list.length) return;
 
-      for (const day of days) {
-        for (const { name, qty } of list) {
-          const key = `${day}__${name}`;
-          reservedByDayItem.set(key, (reservedByDayItem.get(key) || 0) + qty);
-        }
+      for (const { name, qty } of list) {
+        usedByItem.set(name, (usedByItem.get(name) || 0) + qty);
       }
     });
 
-    // --- 요청과 비교: 날짜·품목 단위로 검증 ---
+    // --- 요청과 비교: 품목 단위로 검증 ---
     const conflicts = [];
-    for (const day of reqDays) {
-      for (const { name, qty } of reqItems) {
-        const limit = ITEM_LIMITS[name] ?? 0; // 등록되지 않은 품목은 0으로 처리
-        const reserved = reservedByDayItem.get(`${day}__${name}`) || 0;
-        const available = Math.max(0, limit - reserved);
+    for (const { name, qty } of reqItems) {
+      const limit = ITEM_LIMITS[name] ?? 0; // 등록되지 않은 품목은 0으로 처리
+      const reserved = usedByItem.get(name) || 0;
+      const available = Math.max(0, limit - reserved);
 
-        if (reserved + qty > limit) {
-          conflicts.push({
-            date: day,
-            item: name,
-            reserved,
-            limit,
-            requested: qty,
-            available,
-          });
-        }
+      if (reserved + qty > limit) {
+        conflicts.push({
+          item: name,
+          reserved,
+          limit,
+          requested: qty,
+          available,
+          // 디버깅을 위해 사람이 읽을 수 있게 요청 구간도 리턴
+          requestWindowKST: {
+            startISO: reqStart.toISOString(),
+            endISO: reqEnd.toISOString(),
+          },
+        });
       }
     }
 
     return res.status(200).json({
       ok: true,
-      policy: "per-item-per-day",
+      policy: "per-item-by-time-window", // 참고용: 시간 구간 기반
       available: conflicts.length === 0,
       conflicts,
     });

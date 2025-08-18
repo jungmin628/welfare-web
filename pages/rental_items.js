@@ -28,7 +28,7 @@ export default function RentalItemsPage() {
       { name: "의자", max: 30 },
       { name: "행사용 앰프", max: 1 },
       { name: "이동용 앰프", max: 1 },
-      { name: "리드선 50m", max: 2 },
+      { name: "리드선 50m", max: 1 },
       { name: "리드선 30m", max: 2 },
       { name: "운반기 대형", max: 1 },
       { name: "운반기 소형", max: 1 },

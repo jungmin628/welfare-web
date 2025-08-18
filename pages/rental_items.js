@@ -24,7 +24,7 @@ export default function RentalItemsPage() {
     const items = [
       { name: "천막", max: 10 },
       { name: "천막 가림막", max: 3 },
-      { name: "테이블", max: 16 },
+      { name: "테이블", max: 33 },
       { name: "의자", max: 30 },
       { name: "행사용 앰프", max: 1 },
       { name: "이동용 앰프", max: 1 },
@@ -153,7 +153,7 @@ export default function RentalItemsPage() {
       router.push("/submit");
     } catch (e) {
       console.error(e);
-      alert(`네트워크/서버 오류: ${e.message}`);
+      alert(`네트워크/서버 오류: ${e.message} 다시한번 시도해보세요.`);
     } finally {
       setSubmitting(false);
     }

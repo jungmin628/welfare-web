@@ -138,7 +138,7 @@ export default function SubmitPage() {
       
         <form onSubmit={handleSubmit}>
           <label>소속</label>
-          <input name="department" required onChange={handleChange} />
+          <input name="department" required placeholder="ex) 학생복지위원회" onChange={handleChange} />
 
           <label>학번</label>
           <input name="grade" required placeholder="20xxxxxx(8자)" onChange={handleChange} />
@@ -176,7 +176,7 @@ export default function SubmitPage() {
           <label>반납시간</label>
           <input value={returnTime} readOnly />
 
-          <label>대여 사유 (대여와 반납시간 별개로, 자세하게 행사 운영날짜와 시간을 적어주세요.)</label>
+          <label>대여 사유 (대여와 반납시간 별개로, 자세하게 행사 운영날짜와 시간, 행사명을 적어주세요.)</label>
           <textarea name="reason" rows={2} placeholder="예: 9월 1일 10시~17시 개강행사" onChange={handleChange} />
 
           <label>집회신고서 첨부<br /> * 서명이 완료된 3MB 이하 이미지로 제출</label>

@@ -4,13 +4,12 @@ import Head from "next/head";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 
-// ✅ 플러그인은 그냥 import로 불러오기
+// ✅ FullCalendar 컴포넌트만 dynamic
+const FullCalendar = dynamic(() => import("@fullcalendar/react"), { ssr: false });
+
+// ✅ 플러그인은 일반 import (중복 선언 금지)
 import dayGridPlugin from "@fullcalendar/daygrid";
 import listPlugin from "@fullcalendar/list";
-
-const FullCalendar = dynamic(() => import("@fullcalendar/react"), { ssr: false });
-const dayGridPlugin = dynamic(() => import("@fullcalendar/daygrid"), { ssr: false });
-const listPlugin = dynamic(() => import("@fullcalendar/list"), { ssr: false });
 
 export default function AdminMain() {
   const [activeTab, setActiveTab] = useState("requests");
@@ -22,8 +21,7 @@ export default function AdminMain() {
     try {
       const res = await fetch(`/api/admin/availability?month=${yyyyMM}`);
       const data = await res.json();
-      if (data?.success) setEvents(data.events || []);
-      else setEvents([]);
+      setEvents(data?.success ? (data.events || []) : []);
     } catch (e) {
       console.error(e);
       setEvents([]);
@@ -32,7 +30,6 @@ export default function AdminMain() {
     }
   }, []);
 
-  // 캘린더 뷰가 바뀔 때 현재 달 기준으로 API 호출
   const handleDatesSet = async (arg) => {
     const start = arg.start; // Date
     const y = start.getFullYear();
@@ -40,7 +37,6 @@ export default function AdminMain() {
     await fetchMonth(`${y}-${m}`);
   };
 
-  // 캘린더 탭 들어올 때 최초 1회 로드
   useEffect(() => {
     if (activeTab === "calendar") {
       const now = new Date();
@@ -86,28 +82,25 @@ export default function AdminMain() {
           {activeTab === "requests" && (
             <div className="requests-pane">
               <iframe src="/admin/rental_requests" title="승인/거절" className="iframe" />
-              <p className="hint">※ 필요하면 다음 단계에서 iframe 대신 직접 컴포넌트로 바꿔줄게.</p>
+              <p className="hint">※ 원하면 iframe 대신 컴포넌트로 바꿔줄게.</p>
             </div>
           )}
 
           {activeTab === "calendar" && (
             <div className="calendar-pane">
               <div className="legend">
-                <strong>표시</strong> : 날짜별 <em>남은/총량</em> 요약 (승인건 기준)
+                <strong>표시</strong>: 날짜별 <em>남은/총량</em> 요약 (승인건 기준)
               </div>
               {loading && <div className="loading">불러오는 중…</div>}
               <div className="calendarBox">
                 <FullCalendar
-      plugins={[dayGridPlugin, listPlugin]}
-      initialView="dayGridMonth"
-      headerToolbar={{
-        start: "prev,next today",
-        center: "title",
-        end: "dayGridMonth,listWeek",
-      }}
-      events={events}
-      datesSet={handleDatesSet}
-    />
+                  plugins={[dayGridPlugin, listPlugin]}
+                  initialView="dayGridMonth"
+                  headerToolbar={{ start: "prev,next today", center: "title", end: "dayGridMonth,listWeek" }}
+                  height="auto"
+                  events={events}
+                  datesSet={handleDatesSet}
+                />
               </div>
             </div>
           )}

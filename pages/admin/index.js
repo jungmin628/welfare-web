@@ -4,6 +4,10 @@ import Head from "next/head";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 
+// ✅ 플러그인은 그냥 import로 불러오기
+import dayGridPlugin from "@fullcalendar/daygrid";
+import listPlugin from "@fullcalendar/list";
+
 const FullCalendar = dynamic(() => import("@fullcalendar/react"), { ssr: false });
 const dayGridPlugin = dynamic(() => import("@fullcalendar/daygrid"), { ssr: false });
 const listPlugin = dynamic(() => import("@fullcalendar/list"), { ssr: false });
@@ -94,16 +98,16 @@ export default function AdminMain() {
               {loading && <div className="loading">불러오는 중…</div>}
               <div className="calendarBox">
                 <FullCalendar
-                  plugins={[
-                    require("@fullcalendar/daygrid").default,
-                    require("@fullcalendar/list").default,
-                  ]}
-                  initialView="dayGridMonth"
-                  headerToolbar={{ start: "prev,next today", center: "title", end: "dayGridMonth,listWeek" }}
-                  height="auto"
-                  events={events}
-                  datesSet={handleDatesSet}
-                />
+      plugins={[dayGridPlugin, listPlugin]}
+      initialView="dayGridMonth"
+      headerToolbar={{
+        start: "prev,next today",
+        center: "title",
+        end: "dayGridMonth,listWeek",
+      }}
+      events={events}
+      datesSet={handleDatesSet}
+    />
               </div>
             </div>
           )}

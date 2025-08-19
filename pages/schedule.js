@@ -86,7 +86,7 @@ export default function SchedulePage() {
     <div style={containerStyle}>
       <h2 style={titleStyle}>📅 학생복지위원회 대여 일정</h2>
       <h5 style={{ textAlign: "center", marginBottom: "20px" }}>
-        달력이 잘 나오지 않을 경우, 새로고침 해주세요.
+        달력이 잘 나오지 않을 경우, 새로고침 해주세요. <br /> 8월 22일까지의 대여는 예시입니다.
       </h5>
 
       <FullCalendar

@@ -1,31 +1,50 @@
 // /pages/admin/index.js
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Head from "next/head";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 
-// ⚠️ FullCalendar는 CSR 전용으로 다이내믹 임포트
 const FullCalendar = dynamic(() => import("@fullcalendar/react"), { ssr: false });
 const dayGridPlugin = dynamic(() => import("@fullcalendar/daygrid"), { ssr: false });
 const listPlugin = dynamic(() => import("@fullcalendar/list"), { ssr: false });
 
 export default function AdminMain() {
-  const [activeTab, setActiveTab] = useState("requests"); // "requests" | "calendar"
+  const [activeTab, setActiveTab] = useState("requests");
   const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // 승인된 대여를 일정으로 표시 (잔여수량 계산은 다음 단계에서 API로 연결 예정)
+  const fetchMonth = useCallback(async (yyyyMM) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin/availability?month=${yyyyMM}`);
+      const data = await res.json();
+      if (data?.success) setEvents(data.events || []);
+      else setEvents([]);
+    } catch (e) {
+      console.error(e);
+      setEvents([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // 캘린더 뷰가 바뀔 때 현재 달 기준으로 API 호출
+  const handleDatesSet = async (arg) => {
+    const start = arg.start; // Date
+    const y = start.getFullYear();
+    const m = String(start.getMonth() + 1).padStart(2, "0");
+    await fetchMonth(`${y}-${m}`);
+  };
+
+  // 캘린더 탭 들어올 때 최초 1회 로드
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const res = await fetch("/api/rental/schedule");
-        const data = await res.json();
-        if (data?.success) setEvents(data.events || []);
-      } catch (e) {
-        console.error(e);
-      }
-    };
-    if (activeTab === "calendar") fetchEvents();
-  }, [activeTab]);
+    if (activeTab === "calendar") {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      fetchMonth(`${y}-${m}`);
+    }
+  }, [activeTab, fetchMonth]);
 
   return (
     <>
@@ -44,7 +63,6 @@ export default function AdminMain() {
           </nav>
         </header>
 
-        {/* Tabs */}
         <div className="tabs">
           <button
             className={`tab ${activeTab === "requests" ? "active" : ""}`}
@@ -60,43 +78,31 @@ export default function AdminMain() {
           </button>
         </div>
 
-        {/* Panels */}
         <div className="panel">
           {activeTab === "requests" && (
             <div className="requests-pane">
-              {/* ✅ 기존 승인페이지를 그대로 재사용 (권한/스타일 그대로) */}
-              <iframe
-                src="/admin/rental_requests"
-                title="승인/거절"
-                className="iframe"
-              />
-              <p className="hint">
-                만약 iframe 대신 같은 화면에서 리스트를 직접 렌더링하고 싶으면, 다음 단계에서
-                컴포넌트를 분리해 이 탭에 넣어줄 수 있어.
-              </p>
+              <iframe src="/admin/rental_requests" title="승인/거절" className="iframe" />
+              <p className="hint">※ 필요하면 다음 단계에서 iframe 대신 직접 컴포넌트로 바꿔줄게.</p>
             </div>
           )}
 
           {activeTab === "calendar" && (
             <div className="calendar-pane">
               <div className="legend">
-                <strong>표시 기준</strong> : <span>승인된 대여 일정</span>
-                <small> (잔여수량 표시는 다음 단계에서 연결)</small>
+                <strong>표시</strong> : 날짜별 <em>남은/총량</em> 요약 (승인건 기준)
               </div>
-
-              {/* FullCalendar */}
+              {loading && <div className="loading">불러오는 중…</div>}
               <div className="calendarBox">
                 <FullCalendar
-                  plugins={[require("@fullcalendar/daygrid").default, require("@fullcalendar/list").default]}
+                  plugins={[
+                    require("@fullcalendar/daygrid").default,
+                    require("@fullcalendar/list").default,
+                  ]}
                   initialView="dayGridMonth"
-                  headerToolbar={{
-                    start: "prev,next today",
-                    center: "title",
-                    end: "dayGridMonth,listWeek",
-                  }}
+                  headerToolbar={{ start: "prev,next today", center: "title", end: "dayGridMonth,listWeek" }}
                   height="auto"
                   events={events}
-                  // 필요 시 날짜/이벤트 클릭 핸들러 추가 가능
+                  datesSet={handleDatesSet}
                 />
               </div>
             </div>
@@ -105,80 +111,19 @@ export default function AdminMain() {
       </div>
 
       <style jsx>{`
-        .wrap {
-          max-width: 1100px;
-          margin: 40px auto;
-          padding: 0 16px;
-        }
-        .header {
-          display: flex;
-          align-items: baseline;
-          justify-content: space-between;
-          margin-bottom: 16px;
-        }
-        h1 {
-          font-size: 22px;
-          margin: 0;
-        }
-        .breadcrumbs {
-          font-size: 13px;
-          color: #666;
-        }
-        .tabs {
-          display: flex;
-          gap: 8px;
-          border-bottom: 1px solid #e5e5e5;
-          margin-bottom: 12px;
-        }
-        .tab {
-          padding: 10px 14px;
-          background: #fafafa;
-          border: 1px solid #e5e5e5;
-          border-bottom: none;
-          border-top-left-radius: 8px;
-          border-top-right-radius: 8px;
-          cursor: pointer;
-          font-size: 14px;
-        }
-        .tab.active {
-          background: #fff;
-          font-weight: 600;
-          box-shadow: 0 -2px 6px rgba(0,0,0,0.05);
-        }
-        .panel {
-          border: 1px solid #e5e5e5;
-          border-radius: 0 8px 8px 8px;
-          background: #fff;
-          padding: 16px;
-        }
-        .iframe {
-          width: 100%;
-          height: 78vh;
-          border: none;
-          border-radius: 8px;
-          background: #fff;
-        }
-        .hint {
-          margin-top: 10px;
-          font-size: 12px;
-          color: #888;
-        }
-        .legend {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 14px;
-          margin-bottom: 10px;
-        }
-        .legend small {
-          color: #888;
-        }
-        .calendarBox {
-          border: 1px solid #eee;
-          border-radius: 8px;
-          padding: 8px;
-          background: #fff;
-        }
+        .wrap { max-width: 1100px; margin: 40px auto; padding: 0 16px; }
+        .header { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px; }
+        h1 { font-size:22px; margin:0; }
+        .breadcrumbs { font-size:13px; color:#666; }
+        .tabs { display:flex; gap:8px; border-bottom:1px solid #e5e5e5; margin-bottom:12px; }
+        .tab { padding:10px 14px; background:#fafafa; border:1px solid #e5e5e5; border-bottom:none; border-top-left-radius:8px; border-top-right-radius:8px; cursor:pointer; font-size:14px; }
+        .tab.active { background:#fff; font-weight:600; box-shadow:0 -2px 6px rgba(0,0,0,0.05); }
+        .panel { border:1px solid #e5e5e5; border-radius:0 8px 8px 8px; background:#fff; padding:16px; }
+        .iframe { width:100%; height:78vh; border:none; border-radius:8px; background:#fff; }
+        .hint { margin-top:10px; font-size:12px; color:#888; }
+        .legend { display:flex; align-items:center; gap:8px; font-size:14px; margin-bottom:10px; }
+        .calendarBox { border:1px solid #eee; border-radius:8px; padding:8px; background:#fff; }
+        .loading { font-size:13px; color:#666; margin-bottom:8px; }
       `}</style>
     </>
   );

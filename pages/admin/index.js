@@ -121,6 +121,11 @@ export default function AdminMain() {
         .legend { display:flex; align-items:center; gap:8px; font-size:14px; margin-bottom:10px; }
         .calendarBox { border:1px solid #eee; border-radius:8px; padding:8px; background:#fff; }
         .loading { font-size:13px; color:#666; margin-bottom:8px; }
+        :global(.fc-daygrid-event .fc-event-title) {
+    white-space: pre-line;   /* 줄바꿈 표시 */
+    line-height: 1.25;
+    font-weight: 600;
+  }
       `}</style>
     </>
   );

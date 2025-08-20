@@ -82,7 +82,6 @@ export default function AdminMain() {
           {activeTab === "requests" && (
             <div className="requests-pane">
               <iframe src="/admin/rental_requests" title="승인/거절" className="iframe" />
-              <p className="hint">※ 원하면 iframe 대신 컴포넌트로 바꿔줄게.</p>
             </div>
           )}
 

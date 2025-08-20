@@ -30,12 +30,16 @@ export default function AdminMain() {
     }
   }, []);
 
-  const handleDatesSet = async (arg) => {
-    const start = arg.start; // Date
-    const y = start.getFullYear();
-    const m = String(start.getMonth() + 1).padStart(2, "0");
-    await fetchMonth(`${y}-${m}`);
-  };
+  // ✅ month 계산은 뷰의 기준 시작일(currentStart)로!
+  const handleDatesSet = useCallback(
+    (arg) => {
+      const d = arg?.view?.currentStart ?? arg.start; // dayGridMonth라면 보통 '해당 달의 1일'
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      fetchMonth(`${y}-${m}`);
+    },
+    [fetchMonth]
+  );
 
   useEffect(() => {
     if (activeTab === "calendar") {
@@ -46,7 +50,7 @@ export default function AdminMain() {
     }
   }, [activeTab, fetchMonth]);
 
-  // 🔧 핵심: \n을 안전하게 렌더링하기 위한 커스텀 렌더러
+  // 🔧 \n 줄바꿈을 안전하게 렌더링
   const renderEventContent = (arg) => {
     const text = String(arg.event.title || "");
     const lines = text.split("\n").filter(Boolean);
@@ -106,7 +110,7 @@ export default function AdminMain() {
               </div>
               {loading && <div className="loading">불러오는 중…</div>}
 
-              {/* 디버깅용: API가 실제로 준 데이터를 확인하고 싶다면 임시로 한 번 표시 */}
+              {/* 필요시 디버깅 */}
               {/* <pre style={{maxHeight:200,overflow:'auto',background:'#f7f7f7',padding:8,fontSize:12}}>{JSON.stringify(events.slice(0,5), null, 2)}</pre> */}
 
               <div className="calendarBox">
@@ -117,7 +121,11 @@ export default function AdminMain() {
                   height="auto"
                   events={events}
                   datesSet={handleDatesSet}
-                  eventContent={renderEventContent}  
+                  eventContent={renderEventContent}
+                  eventDisplay="block"
+                  dayMaxEventRows={true}
+                  dayMaxEvents={8}
+                  moreLinkClick="popover"
                 />
               </div>
             </div>
@@ -144,10 +152,18 @@ export default function AdminMain() {
         .fc-multiline-title { white-space: pre-wrap; line-height: 1.25; font-weight: 600; font-size: 0.9rem; }
 
         /* 🔁 보조(백업) CSS: 기본 타이틀도 줄바꿈 허용 (리스트/데이그리드 양쪽) */
-        :global(.fc-event-title), :global(.fc-event-main), :global(.fc-list-event-title) {
+        :global(.fc .fc-event-title),
+        :global(.fc .fc-event-main),
+        :global(.fc .fc-list-event-title) {
           white-space: pre-line !important;
           line-height: 1.25;
           font-weight: 600;
+          color: #111;
+        }
+
+        /* 가시성 강화(접힘/색 충돌 대비) */
+        :global(.fc .fc-daygrid-event) {
+          min-height: 18px;
         }
       `}</style>
     </>

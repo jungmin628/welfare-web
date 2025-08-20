@@ -98,7 +98,7 @@ function normalizeItems(items) {
 function isApprovedStatus(val) {
   if (val === true) return true;
   const s = String(val ?? "").trim().toLowerCase();
-  // 거절/취소/대기만 제외, 나머지는 승인 간주(운영 편의)
+  // 거절/취소/대기 제외, 그 외는 승인 간주(운영 편의)
   if (/(reject|거절|취소|cancel|deny)/.test(s)) return false;
   if (/(pending|대기)/.test(s)) return false;
   return s !== "";
@@ -183,8 +183,8 @@ export default async function handler(req, res) {
       const s = extractDateOnly(req.query.start);
       const e = extractDateOnly(req.query.end);
       if (!s || !e) return res.status(400).json({ success: false, error: "Invalid date range" });
-      // 입력은 KST 기준이라고 보고 내부 UTC로 변환
-      const sK = new Date(s + "T00:00:00"); // local→KST
+      // 입력을 KST로 보고 내부 UTC로 변환
+      const sK = new Date(s + "T00:00:00");
       const eK = new Date(e + "T00:00:00");
       startUTC = fromKST(sK);
       endUTC   = fromKST(eK);
@@ -229,35 +229,44 @@ export default async function handler(req, res) {
       }
     });
 
-    // ✅ 이벤트 생성: 월 범위의 **모든 날짜**에 대해
+    // ✅ 이벤트 생성: "대여가 있는 날"만
     const events = [];
-    for (let day = new Date(startUTC); day < endUTC; day = addDaysUTC(day, 1)) {
-      const key = ymdKST(day);
+    // usageByDate의 키들(=대여 발생한 날)만 돌린다
+    const dayKeys = Object.keys(usageByDate).sort(); // 보기 좋게 정렬
+    for (const key of dayKeys) {
       const used = usageByDate[key] || {};
 
-      // ✅ “모든 품목” 노출: 한도표 전 품목 + (한도표에 없지만 사용된 품목)
+      // 그날 보여줄 품목 목록:
+      // 1) 한도표의 모든 품목 (대여 안 했어도 표시: 남은=총량)
+      // 2) 한도표에 없지만 '사용된' 품목 (한도 미설정으로 표시)
       const namesInLimits = Object.keys(ITEM_LIMITS);
-      const namesExtraUsed = Object.keys(used).filter((n) => !(n in ITEM_LIMITS));
-      const allNames = [...namesInLimits, ...namesExtraUsed.sort()];
+      const namesExtraUsed = Object.keys(used).filter((n) => !(n in ITEM_LIMITS)).sort();
+      const allNames = [...namesInLimits, ...namesExtraUsed];
 
       const lines = [];
       for (const name of allNames) {
         const limit = ITEM_LIMITS[name];
         const usedQty = used[name] || 0;
+
         if (typeof limit === "number") {
+          // 대여 안 한 품목이면 usedQty=0 → 남은=총량
           const left = Math.max(0, limit - usedQty);
           lines.push(`${name} ${left}/${limit}`);
         } else {
-          // 한도 미설정 품목도 사용량이 있으면 보여줌(없으면 굳이 안 보임)
-          if (usedQty > 0) lines.push(`${name} 사용:${usedQty} (한도 미설정)`);
+          // 한도표에 없는데 사용된 품목은 참고용으로 노출
+          if (usedQty > 0) {
+            lines.push(`${name} 사용:${usedQty} (한도 미설정)`);
+          }
         }
       }
 
-      const title = lines.join("\n");
+      // 방어: 혹시 라인이 전혀 없으면 건너뜀
+      if (lines.length === 0) continue;
+
       events.push({
         start: key,
         allDay: true,
-        title,
+        title: lines.join("\n"),
       });
     }
 

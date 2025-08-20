@@ -1,7 +1,6 @@
 // /pages/api/admin/availability.js
 import admin from "firebase-admin";
 
-
 /** --- Firebase Admin 안전 초기화 (base64/JSON 모두 허용) --- */
 function initAdmin() {
   if (admin.apps.length) return;
@@ -50,8 +49,6 @@ const ITEM_LIMITS = {
 };
 
 /** ---------- 유틸: 이름/수량/시간 정규화 ---------- */
-
-// 품목명 정규화 & 별칭(오탈자/공백/붙여쓰기 대응)
 function normalizeName(raw) {
   const n = String(raw || "").replace(/\s+/g, " ").trim();
   const alias = {
@@ -66,84 +63,71 @@ function normalizeName(raw) {
 
 function parseQty(val) {
   if (val == null) return 0;
-  if (typeof val === "number" && Number.isFinite(val))
-    return Math.max(0, Math.trunc(val));
+  if (typeof val === "number" && Number.isFinite(val)) return Math.max(0, Math.trunc(val));
+  if (typeof val === "boolean") return val ? 1 : 0;
   if (typeof val === "string") {
-    const m = val.match(/(\d+)/);
+    const m = val.replace(/[, ]/g, "").match(/(\d+)/);
     if (m) return Math.max(0, parseInt(m[1], 10));
+    if (/on|true|예|O/i.test(val)) return 1;
   }
   return 0;
 }
 
-// items: 다양한 스키마 허용 (qty/quantity/count/amount/selectedQty/selected/value…)
 function normalizeItems(items) {
+  const pickQty = (it) =>
+    it?.qty ?? it?.quantity ?? it?.count ?? it?.amount ??
+    it?.selectedQty ?? it?.selectedCount ?? it?.value ?? it?.val ?? it?.n ?? it?.num ?? it?.total;
+
   if (Array.isArray(items)) {
     return items
       .map((it) => {
-        const name = normalizeName(
-          it?.name ?? it?.itemName ?? it?.title ?? it?.label
-        );
-        const qtyRaw =
-          it?.qty ??
-          it?.quantity ??
-          it?.count ??
-          it?.amount ??
-          it?.selectedQty ??
-          it?.selected ??
-          it?.value;
-        const qty = parseQty(qtyRaw);
+        const name = normalizeName(it?.name ?? it?.itemName ?? it?.title ?? it?.label ?? it?.key);
+        const qty = parseQty(pickQty(it));
         return { name, qty };
       })
       .filter((it) => it.name && it.qty > 0);
   }
   if (items && typeof items === "object") {
     return Object.entries(items)
-      .map(([k, v]) => {
-        const name = normalizeName(k);
-        const qty = parseQty(v);
-        return { name, qty };
-      })
+      .map(([k, v]) => ({ name: normalizeName(k), qty: parseQty(v) }))
       .filter((it) => it.name && it.qty > 0);
   }
   return [];
 }
 
-// 승인 상태 문자열 다양성 대응
 function isApprovedStatus(val) {
   if (val === true) return true;
   const s = String(val ?? "").trim().toLowerCase();
-  // 포함 매칭으로 범용화 (예: "승인 완료", "Approved", "approved_by_admin")
-  return (
-    s.includes("approved") ||
-    s.includes("승인") ||
-    s === "true" ||
-    s === "1" ||
-    s === "yes"
-  );
+  // 거절/취소/대기만 제외, 나머지는 승인 간주(운영 편의)
+  if (/(reject|거절|취소|cancel|deny)/.test(s)) return false;
+  if (/(pending|대기)/.test(s)) return false;
+  return s !== "";
 }
 
-// 날짜 관련
-function ymd(d) {
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(
-    2,
-    "0"
-  )}-${String(d.getUTCDate()).padStart(2, "0")}`;
+/** --- 날짜(KST 기준 키) --- */
+const KST_OFFSET = 9 * 60 * 60 * 1000;
+const toKST = (d) => new Date(d.getTime() + KST_OFFSET);
+const fromKST = (d) => new Date(d.getTime() - KST_OFFSET);
+
+function ymdKST(d) {
+  const k = toKST(d);
+  return `${k.getFullYear()}-${String(k.getMonth() + 1).padStart(2, "0")}-${String(k.getDate()).padStart(2, "0")}`;
 }
 function addDaysUTC(d, n) {
   const nd = new Date(d.getTime());
   nd.setUTCDate(nd.getUTCDate() + n);
   return nd;
 }
-function monthBoundsUTC(yyyyMM) {
+function monthBoundsKST(yyyyMM) {
   const [y, m] = yyyyMM.split("-").map(Number);
-  return { start: new Date(Date.UTC(y, m - 1, 1)), end: new Date(Date.UTC(y, m, 1)) };
+  const startK = new Date(y, m - 1, 1, 0, 0, 0); // KST 자정
+  const endK   = new Date(y, m, 1, 0, 0, 0);     // 다음달 KST 자정
+  return { start: fromKST(startK), end: fromKST(endK) }; // 내부 UTC 처리
 }
 function extractDateOnly(str) {
   const m = String(str || "").match(/^(\d{4}-\d{2}-\d{2})/);
   return m ? m[1] : null;
 }
-
-// KST 기반 시간 파서 (문자열 여러 포맷 허용)
 function makeKSTDate(y, m, d, h = 0, min = 0) {
   // 내부 UTC: KST(+9) 보정
   return new Date(Date.UTC(y, m - 1, d, h - 9, min, 0, 0));
@@ -153,9 +137,7 @@ function parseKSTRange(input) {
   const s = String(input).trim();
 
   // "YYYY-MM-DD HH-HH" / "YYYY-MM-DD HH~HH"
-  let m = s.match(
-    /^(\d{4})-(\d{2})-(\d{2})\s+(\d{1,2})\s*[-~]\s*(\d{1,2})$/
-  );
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{1,2})\s*[-~]\s*(\d{1,2})$/);
   if (m) {
     const [, y, mm, d, h1, h2] = m.map(Number);
     return { start: makeKSTDate(y, mm, d, h1), end: makeKSTDate(y, mm, d, h2) };
@@ -164,17 +146,14 @@ function parseKSTRange(input) {
   // ISO 시작
   if (/^\d{4}-\d{2}-\d{2}T/.test(s)) {
     const dt = new Date(s);
-    if (!isNaN(dt)) return { start: dt, end: dt }; // 짝으로 올 때 end 쪽에서 대체됨
+    if (!isNaN(dt)) return { start: dt, end: dt };
   }
 
   // "YYYY-MM-DD"
   m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   if (m) {
     const [, y, mm, d] = m.map(Number);
-    return {
-      start: makeKSTDate(y, mm, d, 0, 0),
-      end: makeKSTDate(y, mm, d + 1, 0, 0),
-    };
+    return { start: makeKSTDate(y, mm, d, 0, 0), end: makeKSTDate(y, mm, d + 1, 0, 0) };
   }
 
   // "YYYY/MM/DD" 또는 "YYYY.MM.DD"
@@ -193,27 +172,26 @@ function parseKSTRange(input) {
   return null;
 }
 
-/** --- 메인 핸들러: 월 범위 내에서 ‘대여가 있는 날’만 이벤트 생성 --- */
+/** --- 메인 핸들러 --- */
 export default async function handler(req, res) {
   try {
     // 범위: ?month=YYYY-MM  또는 ?start=YYYY-MM-DD&end=YYYY-MM-DD (end 미포함)
     let startUTC, endUTC;
     if (req.query.month) {
-      ({ start: startUTC, end: endUTC } = monthBoundsUTC(req.query.month));
+      ({ start: startUTC, end: endUTC } = monthBoundsKST(req.query.month));
     } else if (req.query.start && req.query.end) {
       const s = extractDateOnly(req.query.start);
       const e = extractDateOnly(req.query.end);
-      if (!s || !e)
-        return res.status(400).json({ success: false, error: "Invalid date range" });
-      startUTC = new Date(`${s}T00:00:00.000Z`);
-      endUTC = new Date(`${e}T00:00:00.000Z`);
+      if (!s || !e) return res.status(400).json({ success: false, error: "Invalid date range" });
+      // 입력은 KST 기준이라고 보고 내부 UTC로 변환
+      const sK = new Date(s + "T00:00:00"); // local→KST
+      const eK = new Date(e + "T00:00:00");
+      startUTC = fromKST(sK);
+      endUTC   = fromKST(eK);
     } else {
       const now = new Date();
-      const cur = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(
-        2,
-        "0"
-      )}`;
-      ({ start: startUTC, end: endUTC } = monthBoundsUTC(cur));
+      const cur = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+      ({ start: startUTC, end: endUTC } = monthBoundsKST(cur));
     }
 
     // 승인된 신청 읽기
@@ -226,36 +204,24 @@ export default async function handler(req, res) {
       const d = doc.data();
       if (!isApprovedStatus(d?.status)) return;
 
-      // 저장된 여러 필드명 케이스 모두 시도
-      const rStart = parseKSTRange(
-        d?.rentalDateTime || d?.rentalDate || d?.startDate
-      );
-      const rEnd = parseKSTRange(
-        d?.returnDateTime || d?.returnDate || d?.endDate
-      );
+      const rStart = parseKSTRange(d?.rentalDateTime || d?.rentalDate || d?.startDate);
+      const rEnd   = parseKSTRange(d?.returnDateTime || d?.returnDate || d?.endDate);
       if (!rStart || !rEnd) return;
 
       const start = rStart.start;
-      const end = rEnd.end ?? rEnd.start; // [start,end) 배타
+      const end   = rEnd.end ?? rEnd.start; // [start,end)
 
-      // 월 범위와 교집합만 일 단위로 더함
+      // 월 범위와 교집합만 일 단위로 누적
       let cur = new Date(Math.max(start.getTime(), startUTC.getTime()));
       // 날짜를 UTC 자정으로 보정
-      cur = new Date(
-        Date.UTC(cur.getUTCFullYear(), cur.getUTCMonth(), cur.getUTCDate())
-      );
+      cur = new Date(Date.UTC(cur.getUTCFullYear(), cur.getUTCMonth(), cur.getUTCDate()));
       const clipEnd = new Date(Math.min(end.getTime(), endUTC.getTime()));
 
-      // 실제 items 구조가 어떤지 보고 싶으면 아래 로그 잠깐 활성화
-      // console.log("DOC", doc.id, { status: d?.status, items: d?.items || d?.rentalItems || d?.itemsObject });
-
       while (cur < clipEnd) {
-        const key = ymd(cur);
+        const key = ymdKST(cur);
         if (!usageByDate[key]) usageByDate[key] = {};
 
-        const items = normalizeItems(
-          d?.items || d?.rentalItems || d?.itemsObject
-        );
+        const items = normalizeItems(d?.items || d?.rentalItems || d?.itemsObject);
         for (const { name, qty } of items) {
           usageByDate[key][name] = (usageByDate[key][name] || 0) + qty;
         }
@@ -263,26 +229,31 @@ export default async function handler(req, res) {
       }
     });
 
-    // 이벤트 생성: ‘대여가 있는 날’만
+    // ✅ 이벤트 생성: 월 범위의 **모든 날짜**에 대해
     const events = [];
     for (let day = new Date(startUTC); day < endUTC; day = addDaysUTC(day, 1)) {
-      const key = ymd(day);
-      const used = usageByDate[key];
-      if (!used) continue;
+      const key = ymdKST(day);
+      const used = usageByDate[key] || {};
+
+      // ✅ “모든 품목” 노출: 한도표 전 품목 + (한도표에 없지만 사용된 품목)
+      const namesInLimits = Object.keys(ITEM_LIMITS);
+      const namesExtraUsed = Object.keys(used).filter((n) => !(n in ITEM_LIMITS));
+      const allNames = [...namesInLimits, ...namesExtraUsed.sort()];
 
       const lines = [];
-      for (const [name, usedQty] of Object.entries(used)) {
+      for (const name of allNames) {
         const limit = ITEM_LIMITS[name];
+        const usedQty = used[name] || 0;
         if (typeof limit === "number") {
           const left = Math.max(0, limit - usedQty);
           lines.push(`${name} ${left}/${limit}`);
         } else {
-          // 한도표에 없는 항목도 보이도록
-          lines.push(`${name} (한도 미설정)`);
+          // 한도 미설정 품목도 사용량이 있으면 보여줌(없으면 굳이 안 보임)
+          if (usedQty > 0) lines.push(`${name} 사용:${usedQty} (한도 미설정)`);
         }
       }
 
-      const title = lines.join("\n"); // 줄바꿈 그대로 표시 (프론트에서 white-space:pre-line)
+      const title = lines.join("\n");
       events.push({
         start: key,
         allDay: true,
@@ -293,8 +264,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true, events });
   } catch (e) {
     console.error(e);
-    return res
-      .status(500)
-      .json({ success: false, error: String(e?.message || e) });
+    return res.status(500).json({ success: false, error: String(e?.message || e) });
   }
 }

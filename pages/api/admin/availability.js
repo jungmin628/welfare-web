@@ -1,5 +1,8 @@
 // /pages/api/admin/availability.js
 import admin from "firebase-admin";
+import '@fullcalendar/common/main.css';
+import '@fullcalendar/daygrid/main.css';
+import '@fullcalendar/list/main.css';
 
 /** --- Firebase Admin 안전 초기화 (base64/JSON 모두 허용) --- */
 function initAdmin() {

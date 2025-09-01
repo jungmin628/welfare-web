@@ -125,7 +125,7 @@ export default function SubmitPage() {
 
     } catch (error) {
       console.error("신청 실패:", error);
-      alert("❌ 신청에 실패했습니다. 다시 시도해주세요. 첨부된 파일의 용량을 다시 확인해주세요. 3MB 이하의 파일을 제출해주세요. 문제가 지속될 시, 부위원장에게 연락 바랍니다. \n\n 부위원장 이정민 : 010-9426-1027 ");
+      alert("❌ 신청에 실패했습니다. 집회신고서 파일은 pdf 제출을 권장합니다. 2MB 넘는지 다시 확인해주세요. 문제가 지속될 시, 부위원장에게 연락 바랍니다. \n\n 부위원장 이정민 : 010-9426-1027 ");
     }
   };
 
@@ -179,7 +179,7 @@ export default function SubmitPage() {
           <label>대여 사유 (대여와 반납시간 별개로, 자세하게 행사 운영날짜와 시간, 행사명을 적어주세요.)</label>
           <textarea name="reason" rows={2} placeholder="예: 9월 1일 10시~17시 개강행사" onChange={handleChange} />
 
-          <label>집회신고서 첨부<br /> <strong> ⚠️ 서명이 완료된 pdf/hwp/docs 파일로 제출. 3MB 넘을 시 제출 제한됩니다. ⚠️</strong></label>
+          <label>집회신고서 첨부<br /> <strong> ⚠️ 서명이 완료된 pdf/hwp/docs 파일로 제출. 2MB 넘을 시 제출 제한됩니다. ⚠️</strong></label>
           
           <details className="example-toggle">
             <summary>집회신고서 예시 보기</summary>

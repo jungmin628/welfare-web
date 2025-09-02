@@ -20,6 +20,10 @@ export default function SubmitPage() {
     file: null,
     sameAsRep: false,
   });
+
+  // ✅ 추가: 제출(검사) 진행 표시
+  const [submitting, setSubmitting] = useState(false);
+
   const [rentalDate, setRentalDate] = useState("");
   const [rentalTime, setRentalTime] = useState("");
   const [returnDate, setReturnDate] = useState("");
@@ -75,32 +79,35 @@ export default function SubmitPage() {
     }
   };
 
-  const fileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
+  const fileToBase64 = (file) =>
+    new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result);
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    const requiredFields = ["department", "grade", "repName", "repPhone", "place", "reason", "file"];
-    for (const field of requiredFields) {
-      if (!form[field]) {
-        alert("❗ 모든 필수 항목을 입력해주세요.");
-        return;
-      }
-    }
-
-    if (form.file && form.file.size > 1024 * 1024 * 10) {
-      alert("❗ 첨부파일은 최대 1MB까지만 업로드 가능합니다.");
-      return;
-    }
+    if (submitting) return; // 중복 제출 방지
+    setSubmitting(true);
 
     try {
+      const requiredFields = ["department", "grade", "repName", "repPhone", "place", "reason", "file"];
+      for (const field of requiredFields) {
+        if (!form[field]) {
+          alert("❗ 모든 필수 항목을 입력해주세요.");
+          setSubmitting(false);
+          return;
+        }
+      }
+
+      if (form.file && form.file.size > 1024 * 1024 * 10) {
+        alert("❗ 첨부파일은 최대 1MB까지만 업로드 가능합니다.");
+        setSubmitting(false);
+        return;
+      }
+
       const rentalFull = `${rentalDate} ${rentalTime}`;
       const returnFull = `${returnDate} ${returnTime}`;
 
@@ -122,20 +129,26 @@ export default function SubmitPage() {
       await addDoc(collection(db, "rental_requests"), data);
       localStorage.clear();
       router.push("/submit_notice");
-
     } catch (error) {
       console.error("신청 실패:", error);
-      alert("❌ 신청에 실패했습니다. 파일을 축소한 후, 1MB(1000KB) 넘는지 다시 확인해주세요.(pdf 변환 추천) 문제가 지속될 시, 부위원장에게 연락 바랍니다. \n\n 부위원장 이정민 : 010-9426-1027 ");
+      alert(
+        "❌ 신청에 실패했습니다. 파일을 축소한 후, 1MB(1000KB) 넘는지 다시 확인해주세요.(pdf 변환 추천) \n 문제가 지속될 시, 부위원장에게 연락 바랍니다. \n\n 부위원장 이정민 : 010-9426-1027 "
+      );
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
     <>
       <Head><title>물품 대여 신청서</title></Head>
-<div className="form-container">
+      <div className="form-container">
         <h2 style={{ textAlign: "center", color: "#4a54e1" }}>📄 물품 대여 신청서</h2>
-              <h3 style={{textAlign: "center"}}><strong style={{color:"red"}}>하나의 행사당 한 개의 물품대여 신청서</strong> 를 작성할 수 있습니다. <br /> 대여물품 변경은 추후 어려울 수 있으니, <br />신중하게 물품을 정하고 작성해주시기 바랍니다.</h3>
-      
+        <h3 style={{ textAlign: "center" }}>
+          <strong style={{ color: "red" }}>하나의 행사당 한 개의 물품대여 신청서</strong> 를 작성할 수 있습니다. <br />
+          대여물품 변경은 추후 어려울 수 있으니, <br />신중하게 물품을 정하고 작성해주시기 바랍니다.
+        </h3>
+
         <form onSubmit={handleSubmit}>
           <label>소속</label>
           <input name="department" required placeholder="ex) 학생복지위원회" onChange={handleChange} />
@@ -179,31 +192,35 @@ export default function SubmitPage() {
           <label>대여 사유 (대여와 반납시간 별개로, 자세하게 행사 운영날짜와 시간, 행사명을 적어주세요.)</label>
           <textarea name="reason" rows={2} placeholder="예: 9월 1일 10시~17시 개강행사" onChange={handleChange} />
 
-          <label>집회신고서 첨부<br /> <strong> ⚠️ 서명이 완료된 pdf/hwp/docs/이미지 1MB 이하 파일로 제출. 1MB 넘을 시 제출 제한됩니다. ⚠️</strong></label>
-          
+          <label>
+            집회신고서 첨부<br />
+            <strong> ⚠️ 서명이 완료된 pdf/hwp/docs/이미지 1MB 이하 파일로 제출. 1MB 넘을 시 제출 제한됩니다. ⚠️</strong>
+          </label>
+
           <details className="example-toggle">
             <summary>집회신고서 예시 보기</summary>
             <div className="example-img-wrap">
               <a href="/물품대여용 집회신고서.hwp" download>물품신청서 제출용 집회신고서 파일 다운로드하기</a>
               <br />
-              <img
-                src="/집회신고서.png"
-                alt="집회신고서 예시 이미지"
-                className="example-img"
-              />
+              <img src="/집회신고서.png" alt="집회신고서 예시 이미지" className="example-img" />
               <p className="example-tip">위의 예시와 같이 작성 후, 제출해주세요.</p>
             </div>
           </details>
           <br />
           <input type="file" name="file" onChange={handleChange} />
-          
+
           <label>기타 문의 사항</label>
           <input name="qna" onChange={handleChange} />
 
-
-          <button type="submit">신청서 제출</button>
+          {/* ✅ 버튼 텍스트/상태 변경 */}
+          <button type="submit" disabled={submitting}>
+            {submitting ? "확인 중…" : "신청서 제출"}
+          </button>
         </form>
-        <button className="back-btn" onClick={() => router.back()}>이전으로</button>
+
+        <button className="back-btn" onClick={() => router.back()} disabled={submitting}>
+          이전으로
+        </button>
       </div>
 
       <style jsx>{`
@@ -249,9 +266,14 @@ export default function SubmitPage() {
           font-size: 15px;
           font-weight: bold;
           cursor: pointer;
+          transition: opacity .2s ease;
         }
         button[type="submit"]:hover {
           background: #6656d1;
+        }
+        button[disabled] {
+          opacity: 0.6;
+          cursor: not-allowed;
         }
         .back-btn {
           margin-top: 10px;
@@ -266,8 +288,13 @@ export default function SubmitPage() {
           font-size: 15px;
           border: none;
           cursor: pointer;
+          transition: opacity .2s ease;
         }
-          .example-toggle {
+        .back-btn[disabled] {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+        .example-toggle {
           margin-top: 8px;
           border: 1px solid #eee;
           border-radius: 8px;

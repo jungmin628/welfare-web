@@ -104,7 +104,7 @@ export default function SubmitPage() {
 
      
 
-      if (form.file && form.file.size > 1024 * 1024 * 10) {
+      if (form.file && form.file.size > 1024 * 1024 * 1) {
         alert("❗ 첨부파일은 최대 700KB까지만 업로드 가능합니다.");
         setSubmitting(false);
         return;
@@ -142,7 +142,7 @@ export default function SubmitPage() {
     } catch (error) {
       console.error("신청 실패:", error);
       alert(
-        "❌ 신청에 실패했습니다. 파일을 축소한 후, 500KB 넘는지 다시 확인해주세요.(pdf 변환 추천) \n 문제가 지속될 시, 부위원장에게 연락 바랍니다. \n\n 부위원장 이정민 : 010-9426-1027 "
+        "❌ 신청에 실패했습니다. 파일이 700KB 이상인지 확인해주시고, 넘을 시 축소해서 제출해주세요. 문제가 지속될 시, 자주하는 질문 탭을 먼저 확인해주시기 바랍니다. "
       );
     } finally {
       setSubmitting(false);
@@ -204,7 +204,7 @@ export default function SubmitPage() {
 
           <label>
             집회신고서 첨부<br />
-            <strong> ⚠️ 서명이 완료된 pdf/hwp/docs 500KB 이하 파일로 제출. 1MB 넘을 시 제출 제한됩니다. ⚠️</strong>
+            <strong> ⚠️ 서명이 완료된 pdf/hwp/docs 500KB 이하 파일로 제출 필수.  ⚠️</strong>
           </label>
 
           <details className="example-toggle">

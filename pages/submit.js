@@ -217,7 +217,12 @@ export default function SubmitPage() {
             </div>
           </details>
           <br />
-          <input type="file" name="file" onChange={handleChange} />
+          <input
+            type="file"
+            name="file"
+            accept=".pdf,.hwp,.docx,application/pdf,application/x-hwp,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            onChange={handleChange}
+          />
 
           <label>기타 문의 사항</label>
           <input name="qna" onChange={handleChange} />

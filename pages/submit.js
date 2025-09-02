@@ -95,8 +95,8 @@ export default function SubmitPage() {
       }
     }
 
-    if (form.file && form.file.size > 1024 * 1024 * 3) {
-      alert("❗ 첨부파일은 최대 3MB까지만 업로드 가능합니다.");
+    if (form.file && form.file.size > 1024 * 1024 * 10) {
+      alert("❗ 첨부파일은 최대 10MB까지만 업로드 가능합니다.");
       return;
     }
 

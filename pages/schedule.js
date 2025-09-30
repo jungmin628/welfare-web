@@ -90,16 +90,15 @@ export default function SchedulePage() {
       </h5>
 
       <FullCalendar
-        plugins={[dayGridPlugin, listPlugin]}
-        initialView="dayGridMonth"
-        initialDate="2025-09-01"
-        headerToolbar={{ start: "today", center: "title", end: "prev,next" }}
-        events={events}
-        eventContent={renderEventContent}
-        height="auto"
-        displayEventEnd={true}
-      />
-
+  plugins={[dayGridPlugin, listPlugin]}
+  initialView="dayGridMonth"
+  initialDate={new Date()}   // 클라이언트 로컬 시간(한국이면 KST) 기준
+  headerToolbar={{ start: "today", center: "title", end: "prev,next" }}
+  events={events}
+  eventContent={renderEventContent}
+  height="auto"
+  displayEventEnd={true}
+/>
       <Link href="/rental" className="next-btn">
         대여신청하러 가기
       </Link>

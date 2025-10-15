@@ -22,7 +22,7 @@ export default function RentalItemsPage() {
 
   useEffect(() => {
     const items = [
-      { name: "천막", max: 10 },
+      { name: "천막", max: 9 },
       { name: "천막 가림막", max: 3 },
       { name: "테이블", max: 29 },
       { name: "의자", max: 30 },
@@ -38,7 +38,7 @@ export default function RentalItemsPage() {
       { name: "무전기", max: 6 },
       { name: "확성기", max: 6 },
       { name: "명찰", max: 80 },
-      { name: "이젤", max: 5 },
+      { name: "이젤", max: 8 },
       { name: "돗자리", max: 9 },
       { name: "1인용 돗자리", max: 96 },
       { name: "목장갑", max: 69 },

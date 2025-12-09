@@ -25,7 +25,7 @@ export default function RentalItemsPage() {
       { name: "천막", max: 8 },
       { name: "천막 가림막", max: 3 },
       { name: "테이블", max: 29 },
-      { name: "의자", max: 25 },
+      { name: "의자", max: 30 },
       { name: "행사용 앰프", max: 1 },
       { name: "이동용 앰프", max: 1 },
       { name: "리드선 50m", max: 1 },

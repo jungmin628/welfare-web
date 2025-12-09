@@ -153,7 +153,7 @@ export default function SubmitPage() {
     <>
       <Head><title>물품 대여 신청서</title></Head>
       <div className="form-container">
-        <h2 style={{ textAlign: "center", color: "#4a54e1" }}>📄 물품 대여 신청서</h2>
+        <h2 style={{ textAlign: "center", color: "#556C1E" }}>📄 물품 대여 신청서</h2>
         <h3 style={{ textAlign: "center" }}>
           <strong style={{ color: "red" }}>하나의 행사당 한 개의 물품대여 신청서</strong> 를 작성할 수 있습니다. <br />
           대여물품 변경은 추후 어려울 수 있으니, <br />신중하게 물품을 정하고 작성해주시기 바랍니다.
@@ -274,7 +274,7 @@ export default function SubmitPage() {
           margin-top: 25px;
           width: 100%;
           padding: 12px;
-          background: #7b68ee;
+          background: #97B552;
           border: none;
           border-radius: 8px;
           color: #fff;
@@ -284,7 +284,7 @@ export default function SubmitPage() {
           transition: opacity .2s ease;
         }
         button[type="submit"]:hover {
-          background: #6656d1;
+          background: #556C1E;
         }
         button[disabled] {
           opacity: 0.6;

@@ -255,7 +255,7 @@ cell.appendChild(numberSpan);
 
       <style jsx>{`
         .calendar {
-          background: #f4f4ff;
+          background: #f5fffaff;
           max-width: 420px;
           margin: 40px auto;
           padding: 20px;
@@ -276,7 +276,7 @@ cell.appendChild(numberSpan);
         }
 
         .calendar-controls button {
-          background: #7b68ee;
+          background: #97B552;
           color: #fff;
           border: none;
           padding: 6px 12px;
@@ -332,7 +332,7 @@ cell.appendChild(numberSpan);
         }
 
         .calendar-cell.selected {
-          background: #4a54e1;
+          background: #97B552;
           color: white;
         }
 
@@ -367,7 +367,7 @@ cell.appendChild(numberSpan);
         }
 
         .time-slot-btn.selected-time {
-          background: #4a54e1;
+          background: #97B552;
           color: white;
         }
 
@@ -375,7 +375,7 @@ cell.appendChild(numberSpan);
           display: block;
           margin: 20px auto 0;
           text-align: center;
-          background: #4a54e1;
+          background: #97B552;
           color: #fff;
           padding: 10px;
           border-radius: 10px;

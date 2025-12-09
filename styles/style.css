@@ -27,10 +27,10 @@ body {
     max-width: 450px;
     margin: auto;
 }
-
+/*대표화면 탭 및 글씨 색*/
 .new-menu-item {
     background-color: #ffffff;
-    color: #4a54e1;
+    color: #556C1E;
     padding: 20px;
     border-radius: 15px;
     font-size: 15px;
@@ -45,8 +45,8 @@ body {
     transition: all 0.3s;
 }
 
-.new-menu-item:hover {
-    border-color: #a1aaf2;
+.new-menu-item:hover { 
+    border-color: #556C1E;
     transform: translateY(-4px);
 }
 
@@ -114,7 +114,7 @@ body {
 }
 
 .login-page-container button:hover {
-    background-color: #6959cd;
+    background-color: #97B552;
 }
 
 .login-page-container #message {
@@ -143,7 +143,7 @@ body {
 body {
     margin:0;
     padding:0;
-    background-color:#f1edff;
+    background-color:#E2F7B0;
     font-family: 'Segoe UI', sans-serif;
 }
 
@@ -167,7 +167,7 @@ body {
 .intro-oval {
     display: inline-block;
     padding: 10px 25px;
-    background-color: #c2a9ff;
+    background-color: #97B552;
     color: #ffffff;
     border-radius: 50px;
     margin-bottom: 15px;
@@ -184,7 +184,7 @@ body {
     width: 80%;
     padding: 14px;
     margin: 10px auto;
-    background-color: #b29dff;
+    background-color: #97b552;
     color: white !important;
     border-radius: 10px;
     font-size: 15px;
@@ -197,7 +197,7 @@ body {
 }
 
 .intro-btn:hover {
-    background-color: #a38aff;
+    background-color: #819C3F;
     transform: translateY(-2px);
 }
 
@@ -232,7 +232,7 @@ body {
 .intro-oval {
     display: inline-block;
     padding: 12px 30px;
-    background-color: #c2a9ff;
+    background-color: #97B552;
     color: #ffffff;
     border-radius: 50px;
     margin-bottom: 15px;
@@ -244,7 +244,7 @@ body {
 .intro-btn {
     padding: 14px;
     margin: 10px auto;
-    background-color: #b29dff;
+    background-color: #97B552;
     color: white;
     border-radius: 10px;
     font-size: 15px; /* 글자 크기 증가 */
@@ -282,7 +282,7 @@ body.intro-page {
 }
 
 .location-title {
-    color: #4a54e1;
+    color: #000000;
     font-size: 18px;
     margin-bottom: 15px;
 }
@@ -298,7 +298,7 @@ body.intro-page {
 }
 
 .location-info strong {
-    color: #4a54e1;
+    color: #000000;
 }
 
 .location-notice {
@@ -320,7 +320,7 @@ body.intro-page {
   }
   
   .welfare-title {
-    color: #4a54e1;
+    color: #556C1E;
     font-size: 20px;
     margin-bottom: 10px;
   }
@@ -332,7 +332,7 @@ body.intro-page {
   }
   
   .welfare-box {
-    background-color: #b29dff;
+    background-color: #97B552;
     color: white;
     padding: 15px;
     border-radius: 10px;
@@ -346,7 +346,7 @@ body.intro-page {
   }
   
   .welfare-box:hover {
-    background-color: #a38aff;
+    background-color: #556C1E;
   }
   
   .welfare-detail {
@@ -354,7 +354,7 @@ body.intro-page {
     color: #333;
     font-size: 14px;
     padding: 12px;
-    border-left: 4px solid #a38aff;
+    border-left: 4px solid #556C1E;
     border-radius: 8px;
     width: 85%;
     margin: 5px auto 15px;
@@ -369,7 +369,7 @@ body.intro-page {
   
   .org-title {
     font-size: 20px;
-    color: #4a54e1;
+    color: #556C1E;
     margin-bottom: 20px;
   }
   
@@ -390,14 +390,14 @@ body.intro-page {
   }
   
   .notice-title {
-    color: #4a54e1;
+    color: #556C1E;
     font-size: 20px;
     margin-bottom: 20px;
   }
   
   .contact-box {
     background-color: #f5f1ff;
-    border-left: 5px solid #a38aff;
+    border-left: 5px solid #97B552;
     padding: 15px;
     border-radius: 10px;
     margin-bottom: 30px;
@@ -408,7 +408,7 @@ body.intro-page {
   }
   
   .contact-box strong {
-    color: #4a54e1;
+    color: #556C1E;
   }
   
   .notice-list {
@@ -433,7 +433,7 @@ body.intro-page {
   
   .rental-title {
     font-size: 22px;
-    color: #4a54e1;
+    color: #556C1E;
     margin-bottom: 20px;
   }
   
@@ -486,21 +486,21 @@ body.intro-page {
     background-color: #e7e4fb;
   }
   .selected {
-    background-color: #7b68ee !important;
+    background-color: #556C1E !important;
     color: white;
     font-weight: bold;
-    border: 2px solid #4a54e1;
+    border: 2px solid #324012;
   }
   
   .selected-date-display {
     margin-top: 15px;
     font-size: 15px;
-    color: #4a54e1;
+    color: #97B552;
     font-weight: 600;
   }
 
   .next-btn {
-    background-color: #4a54e1;
+    background-color: #97B552;
     color: white;
     padding: 12px 20px;
     border-radius: 10px;
@@ -513,7 +513,7 @@ body.intro-page {
     font-size: 16px;
   }
   .next-btn:hover {
-    background-color: #3c3ccf;
+    background-color: #556C1E;
   }
  .time-option {
   display: block;
@@ -530,7 +530,7 @@ body.intro-page {
 }
 
 .time-option:hover {
-  border-color: #a28cff;
+  border-color: #97B552;
   background-color: #e7ddff;
 }
 
@@ -539,7 +539,7 @@ input[type="radio"] {
 }
 
 input[type="radio"]:checked + .time-option {
-  background-color: #7b68ee;
+  background-color: #556C1E;
   color: white;
   font-weight: bold;
   border-color: #5e52d4;

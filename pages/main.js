@@ -11,7 +11,7 @@ export default function MainPage() {
       </Head>
 
       <div className="new-main-container">
-        <img src="/swc로고.png" className="main-logo" alt="학생복지위원회 로고" />
+        <img src="/swc로고26.png" className="main-logo" alt="학생복지위원회 로고" />
 
         <div className="new-menu-grid">
           <Link href="/intro" className="new-menu-item">
@@ -31,13 +31,13 @@ export default function MainPage() {
         <span >문의사항이 있을 경우, <strong>"자주 하는 질문" </strong>을 먼저 확인해주시기 바랍니다. </span>
         <br /> <br />
         <span>
-          <strong> 제19대 학생복지위원회 위원장 유재범 : 010-5049-4135
-          <br /> 제19대 학생복지위원회 부위원장 이정민 : 010-9426-1027
+          <strong> 제20대 학생복지위원회 위원장 안현성 : 010-1234-5678
+          <br /> 제20대 학생복지위원회 부위원장 전현태 : 010-1234-5678
         </strong> </span>
       </div>
       <style jsx>{`
       span{
-        color : #9352E6
+        color : #556C1E
       }
       `}</style>
     </>

@@ -122,11 +122,11 @@ const titleStyle = {
   fontSize: "24px",
   textAlign: "center",
   marginBottom: "10px",
-  color: "#546fff",
+  color: "#556C1E",
   fontWeight: "600",
 };
 const eventBoxStyle = {
-  backgroundColor: "#546fff",
+  backgroundColor: "#556C1E",
   color: "white",
   padding: "6px 8px",
   borderRadius: "6px",

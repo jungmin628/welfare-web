@@ -99,7 +99,7 @@ export default function FAQPage() {
         .notice-container {
           max-width: 760px;
           margin: 40px auto;
-          background: #f4f4ff;
+          background: #bfd1c1ff;
           padding: 20px;
           border-radius: 12px;
           box-shadow: 0 0 8px rgba(0, 0, 0, 0.08);
@@ -107,7 +107,7 @@ export default function FAQPage() {
         .notice-title {
           text-align: center;
           margin-bottom: 16px;
-          color: #4a54e1;
+          color: #556C1E;
         }
         .contact-box {
           background: #fff;

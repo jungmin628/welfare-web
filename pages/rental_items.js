@@ -210,8 +210,8 @@ export default function RentalItemsPage() {
       </div>
 
       <style jsx>{`
-        .container { max-width: 600px; margin: 40px auto; background: #f4f4ff; padding: 20px; border-radius: 12px; box-shadow: 0 0 8px rgba(0,0,0,0.1); }
-        .page-title { text-align: center; color: #4a54e1; margin-bottom: 20px; }
+        .container { max-width: 600px; margin: 40px auto; background: #f4fff6ff; padding: 20px; border-radius: 12px; box-shadow: 0 0 8px rgba(0,0,0,0.1); }
+        .page-title { text-align: center; color: #556C1E; margin-bottom: 20px; }
         .item-list { display: flex; flex-direction: column; gap: 15px; }
         .item-card { background: white; padding: 12px 16px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
         .item-label { display: block; font-weight: 600; margin-bottom: 8px; }
@@ -221,7 +221,7 @@ export default function RentalItemsPage() {
         .item-control .unit { font-size: 14px; color: #555; }
         .button-group { display: flex; flex-direction: column; align-items: center; margin-top: 30px; gap: 5px; }
         .btn { width: 120px; height: 48px; padding: 0; font-size: 16px; font-weight: bold; text-align: center; line-height: 48px; border: none; border-radius: 8px; box-sizing: border-box; cursor: pointer; display: inline-block; }
-        .submit-btn { background: #4a54e1; color: white; }
+        .submit-btn { background: #556C1E; color: white; }
         .back-btn { background: #ccc; color: #333; }
         h5 { text-align: center; }
         .contact-info { margin-top: 20px; font-size: 14px; color: #555; text-align: center; }

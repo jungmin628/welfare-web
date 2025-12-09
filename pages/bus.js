@@ -24,7 +24,7 @@ export default function BusRental() {
           </div>
 <div className="contact-wrapper">
   <a href="tel:01050494135" className="contact-button">
-   학생복지위원회 위원장 유재범 <br /> ☏ 010-5049-4135
+   학생복지위원회 위원장 안현성 <br /> ☏ 010-1234-5678
   </a>
 
           </div>
@@ -33,7 +33,7 @@ export default function BusRental() {
 
       <style jsx>{`
         .container {
-          background-image: url("/배경.jpg"); /* public/배경.jpg 있어야 함 */
+          
           background-size: cover;
           background-position: center;
           background-repeat: no-repeat;
@@ -82,7 +82,7 @@ export default function BusRental() {
 
 .contact-button {
   display: inline-block;
-  background-color: #6b46c1;
+  background-color: #99c339;
   color: white;
   padding: 12px 24px;
   border-radius: 100px;
@@ -95,7 +95,7 @@ export default function BusRental() {
 }
 
 .contact-button:hover {
-  background-color: #553c9a;
+  background-color: #819C3F
 }
       `}</style>
     </>

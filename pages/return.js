@@ -220,7 +220,7 @@ export default function ReturnPage() {
 
       <style jsx>{`
         .calendar {
-          background: #E6E6FA;
+          background: #bbe6c6ff;
           max-width: 420px;
           margin: 40px auto;
           padding: 20px;
@@ -232,7 +232,7 @@ export default function ReturnPage() {
           display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
         }
         .calendar-controls button {
-          background: #7b68ee; color: #fff; border: none; padding: 6px 12px; border-radius: 5px;
+          background: #97B552; color: #fff; border: none; padding: 6px 12px; border-radius: 5px;
         }
         .calendar-header {
           display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; margin-bottom: 5px;
@@ -246,7 +246,7 @@ export default function ReturnPage() {
         }
         .calendar-cell.empty { background: transparent; }
         .calendar-cell.disabled { background: #e0e0e0; color: #aaa; cursor: not-allowed; }
-        .calendar-cell.selected { background: #4a54e1; color: white; }
+        .calendar-cell.selected { background: #556C1E; color: white; }
         .time-slot-container { margin-top: 20px; text-align: center; }
         .time-slot-buttons {
           display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 10px;
@@ -255,7 +255,7 @@ export default function ReturnPage() {
           background: #ddd; padding: 8px 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;
         }
         .time-slot-btn:hover { background: #ccc; }
-        .time-slot-btn.selected-time { background: #4a54e1; color: white; }
+        .time-slot-btn.selected-time { background: #556C1E; color: white; }
         .next-btn {
           display: block; margin: 20px auto 0; text-align: center; background: #4a54e1; color: #fff; padding: 10px; border-radius: 10px; text-decoration: none;
         }

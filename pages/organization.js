@@ -26,13 +26,13 @@ export default function OrganizationPage() {
           margin: auto;
           padding: 30px;
           text-align: center;
-          background: #f8f8ff;
+          background: #e2f7b0;
           border-radius: 12px;
           box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
         }
 
         .org-title {
-          color: #4a54e1;
+          color: #556C1E;
           font-size: 24px;
           margin-bottom: 20px;
         }

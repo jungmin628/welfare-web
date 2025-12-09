@@ -37,7 +37,7 @@ export default function SubmitNoticePage() {
       <style jsx>{`
         .wrapper {
           min-height: 100vh;
-          background-color: #f4f4ff;
+          background-color: #e2f7b0;
           display: flex;
           justify-content: center;
           align-items: center;
@@ -53,7 +53,7 @@ export default function SubmitNoticePage() {
         }
         h2 {
           text-align: center;
-          color: #4a54e1;
+          color: #556C1E;
           margin-bottom: 24px;
           font-size: 22px;
         }

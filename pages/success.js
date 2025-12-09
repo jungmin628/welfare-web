@@ -26,7 +26,7 @@ export default function SuccessPage() {
       <style jsx>{`
         .wrapper {
           height: 100vh;
-          background-color: #f4f0ff;
+          background-color: #e2f7b0;
           display: flex;
           justify-content: center;
           align-items: center;
@@ -45,7 +45,7 @@ export default function SuccessPage() {
         }
 
         h2 {
-          color: #4a54e1;
+          color: #556C1E;
           margin-bottom: 18px;
           font-size: 22px;
         }
@@ -63,7 +63,7 @@ export default function SuccessPage() {
 
         .main-btn {
           display: inline-block;
-          background-color: #4a54e1;
+          background-color: #556C1E;
           color: white;
           font-weight: bold;
           padding: 12px 24px;
@@ -74,7 +74,7 @@ export default function SuccessPage() {
         }
 
         .main-btn:hover {
-          background-color: #3e46c8;
+          background-color: #556C1E;
         }
       `}</style>
     </>

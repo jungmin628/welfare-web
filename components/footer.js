@@ -12,7 +12,7 @@ export default function Footer() {
           padding: 1px 5px;
           border-top: 1px solid #ddd;
           background-color: #D6E8AB;
-          margin-top: 40px;
+          margin-top: 50px;
         }
       `}</style>
     </footer>

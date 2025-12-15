@@ -539,7 +539,7 @@ input[type="radio"] {
 }
 
 input[type="radio"]:checked + .time-option {
-  background-color: #556C1E;
+  background-color: #7b68ee;
   color: white;
   font-weight: bold;
   border-color: #5e52d4;

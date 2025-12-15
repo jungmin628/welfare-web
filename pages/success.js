@@ -26,7 +26,7 @@ export default function SuccessPage() {
       <style jsx>{`
         .wrapper {
           height: 100vh;
-          background-color: #e2f7b0;
+          background-color: #e2f7b1;
           display: flex;
           justify-content: center;
           align-items: center;

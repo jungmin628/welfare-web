@@ -5,7 +5,7 @@
 > 학생복지위원회의 효율적인 물품 관리와 대여 과정을 지원합니다.
 
 > 해당 링크로 들어가면 확인할 수 있습니다.
-> https://welfare-web-lac.vercel.app/main
+> https://hallym-swc19.vercel.app/main
 
 ---
 

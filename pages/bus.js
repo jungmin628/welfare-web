@@ -24,7 +24,7 @@ export default function BusRental() {
           </div>
 <div className="contact-wrapper">
   <a href="tel:01050494135" className="contact-button">
-   학생복지위원회 위원장 안현성 <br /> ☏ 010-1234-5678
+   학생복지위원회 위원장 안현성 <br /> ☏ 010-9383-8422
   </a>
 
           </div>

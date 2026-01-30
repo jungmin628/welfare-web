@@ -22,7 +22,7 @@ export default function RentalItemsPage() {
 
   useEffect(() => {
     const items = [
-      { name: "천막", max: 7 },
+      { name: "천막", max: 9 },
       { name: "천막 가림막", max: 3 },
       { name: "테이블", max: 29 },
       { name: "의자", max: 30 },

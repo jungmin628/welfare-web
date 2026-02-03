@@ -12,7 +12,7 @@ export default function OrganizationPage() {
       <div className="org-container">
         <h2 className="org-title">학생복지위원회 조직도</h2>
         <div className="org-image-wrapper">
-          <img src="/조직도.png" alt="조직도 이미지" className="org-img" />
+          <img src="/조직도20.png" alt="조직도 이미지" className="org-img" />
         </div>
 
         <Link href="/intro" className="back-btn">

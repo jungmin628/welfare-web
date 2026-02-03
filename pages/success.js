@@ -15,7 +15,7 @@ export default function SuccessPage() {
           <p className="desc">
             입력하신 내용을 바탕으로
             <strong>부위원장이 개별 연락</strong>을 드릴 예정입니다. <br />
-            문의사항은 부위원장 이정민 : 010-9426-1027 로 연락바랍니다.
+            문의사항은 부위원장 전현태 : 010-4002-0516 로 연락바랍니다.
           </p>
           <Link href="/main" className="main-btn">
             메인 페이지로 이동

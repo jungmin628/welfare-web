@@ -205,7 +205,7 @@ export default function RentalItemsPage() {
 
         <p className="contact-info">
           문의사항이 생길 시, <br />
-          부위원장 이정민 : 010-9426-1027 에게 연락바랍니다.
+          부위원장 전현태 : 010-4002-0516 에게 연락바랍니다.
         </p>
       </div>
 

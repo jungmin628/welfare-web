@@ -40,7 +40,7 @@ export default function IntroPage() {
 
         {/* ✅ 카드형 인스타그램 링크 */}
         <a
-          href="https://www.instagram.com/hallym_swc19"
+          href="https://www.instagram.com/hallym_swc20"
           target="_blank"
           rel="noopener noreferrer"
           className="insta-card"
@@ -49,7 +49,7 @@ export default function IntroPage() {
           <img src="/swc로고26.png" alt="학생복지위원회 인스타그램 미리보기" className="insta-thumb" />
           <div className="insta-info">
             <span className="insta-title">학생복지위원회 인스타그램</span>
-            <span className="insta-desc">@hallym_swc19 팔로우하고 최신 소식 확인하기</span>
+            <span className="insta-desc">@hallym_swc20 팔로우하고 최신 소식 확인하기</span>
           </div>
         </a>
 

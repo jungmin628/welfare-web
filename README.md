@@ -45,3 +45,4 @@
 | 기타           | Custom Calendar UI, Firebase Hosting(이미지/정적 파일) |
 
 
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/e4875d9e-42d2-45b8-bdc4-664bdb8a27ef" />

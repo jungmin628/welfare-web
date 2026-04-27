@@ -6,7 +6,7 @@
 
 > 해당 링크로 들어가면 확인할 수 있습니다.
 >
-> [https://welfare-web-lac.vercel.app/main](https://hallym-swc19.vercel.app/main)
+> [https://hallym-swc19.vercel.app/main](https://hallym-swc19.vercel.app/main)
 > 
 > [https://welfare-web26.vercel.app/main](https://welfare-web26.vercel.app/main)
 
